@@ -67,6 +67,8 @@ function emSegundoPlano(c: Context<App>, p: Promise<unknown>) {
 
 // Público ---------------------------------------------------------------------
 
+app.get("/", (c) => c.json({ ok: true, api: "Quitutes da Ruiva", catalogo: "/api/catalogo" }));
+
 app.get("/api/catalogo", async (c) => {
   const { produtos, datas } = await db.catalogo(c.get("db"));
   c.header("Cache-Control", "public, max-age=60");
