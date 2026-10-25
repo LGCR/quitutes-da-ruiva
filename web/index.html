@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Quitutes da Ruiva · Pré-venda de Panetones</title>
+<meta name="description" content="Encomende seu panetone de Natal da Quitutes da Ruiva. Sabor em cada detalhe.">
+<meta property="og:title" content="Pré-venda de Panetones · Quitutes da Ruiva">
+<meta property="og:image" content="/assets/logo.png">
+<link rel="icon" href="/assets/logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,600..800;1,9..144,600..800&family=Nunito:wght@400;600;700;800&display=swap">
+<link rel="stylesheet" href="/assets/style.css">
+<style>
+  header.band { border-bottom: 6px solid var(--coral) }
+  header .wrap { padding-block: 28px; display: flex; justify-content: center }
+  .logo-img { width: min(300px, 78vw); height: auto; display: block; border-radius: 12px; box-shadow: 0 10px 30px -18px rgba(80, 30, 25, .5) }
+  /* selo desenhado (usado se a imagem da logo não carregar) */
+  .selo { position: relative; width: min(340px, 86vw); aspect-ratio: 4 / 4.6; display: grid; place-items: center; text-align: center }
+  .selo > svg { position: absolute; inset: 0; width: 100%; height: 100% }
+  .selo .conteudo { position: relative; display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 0 14% }
+  .selo h1 { margin: 0; font-size: clamp(2.2rem, 9vw, 3rem); line-height: .95 }
+  .selo h1 span { display: block }
+  .laco { width: 72px; height: auto; color: var(--coral) }
+  .linha-laco { display: flex; align-items: center; gap: 10px; width: 100% }
+  .linha-laco::before, .linha-laco::after { content: ""; flex: 1; height: 2px; background: var(--rosa) }
+
+  main .wrap { padding-block: 28px 64px; display: flex; flex-direction: column; align-items: center; gap: 20px }
+  .intro { text-align: center; max-width: 560px; display: flex; flex-direction: column; gap: 6px; align-items: center }
+  .intro h2 { margin: 0; font-size: clamp(1.6rem, 5vw, 2.1rem) }
+  .intro p { margin: 0; color: var(--muted); font-weight: 600 }
+  .pill { display: inline-flex; background: var(--azul-claro); border: 1px solid var(--azul); border-radius: 99px; padding: 3px 12px; font-size: .82rem; font-weight: 800 }
+
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: var(--r); padding: 22px; width: 100%; max-width: 680px }
+  form { display: flex; flex-direction: column; gap: 24px }
+  fieldset { border: 0; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 12px; min-width: 0 }
+  legend { font-family: var(--font-display); font-weight: 700; font-size: 1.35rem; color: var(--coral); padding: 0; margin-bottom: 8px; display: flex; align-items: center; gap: 10px }
+  legend .n { display: inline-grid; place-items: center; width: 30px; height: 30px; border-radius: 50%; background: var(--rosa); color: #fff; font-family: var(--font-body); font-size: .95rem; font-weight: 800 }
+  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px }
+  @media (max-width: 560px) { .row { grid-template-columns: 1fr } }
+  label.f { display: flex; flex-direction: column; gap: 6px; font-weight: 700; font-size: .92rem; min-width: 0 }
+  label.f small { font-weight: 600; color: var(--muted) }
+
+  .menu { display: flex; flex-direction: column; border: 2px dashed var(--line); border-radius: 16px; overflow: hidden }
+  .item { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 14px 16px; border-top: 2px dashed var(--line) }
+  .item:first-child { border-top: 0 }
+  .item.on { background: var(--rosa-claro) }
+  .item h3 { margin: 0; font-size: 1.05rem; font-weight: 800; display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap }
+  .item .peso { font-weight: 700; font-size: .8rem; color: var(--muted) }
+  .item p { margin: 2px 0 0; color: var(--muted); font-size: .9rem }
+  .item .preco { font-weight: 800; color: var(--coral); font-variant-numeric: tabular-nums; margin-top: 4px; display: block }
+  .step { display: flex; align-items: center; background: var(--card); border: 2px solid var(--rosa); border-radius: 99px; overflow: hidden }
+  .step button { appearance: none; border: 0; background: none; cursor: pointer; width: 40px; height: 40px; font-size: 1.3rem; font-weight: 800; color: var(--coral) }
+  .step button:hover { background: var(--rosa-claro) }
+  .step output { min-width: 28px; text-align: center; font-weight: 800; font-variant-numeric: tabular-nums }
+  .carregando { padding: 20px; text-align: center; color: var(--muted) }
+
+  .seg { display: grid; grid-template-columns: 1fr 1fr; gap: 10px }
+  @media (max-width: 400px) { .seg { grid-template-columns: 1fr } }
+  .seg label { position: relative; cursor: pointer }
+  .seg input { position: absolute; opacity: 0; inset: 0 }
+  .seg span { display: flex; flex-direction: column; gap: 2px; border: 2px solid var(--line); border-radius: 14px; padding: 12px 14px; font-weight: 800; background: var(--bg); height: 100% }
+  .seg span small { font-weight: 600; color: var(--muted) }
+  .seg input:checked + span { border-color: var(--coral); background: var(--rosa-claro) }
+  .seg input:focus-visible + span { outline: 3px solid var(--azul-forte); outline-offset: 2px }
+  .check { display: flex; gap: 10px; align-items: flex-start; font-size: .92rem; font-weight: 600 }
+  .check input { width: 20px; height: 20px; accent-color: var(--coral); margin-top: 2px; flex: none }
+
+  .total { position: sticky; bottom: 0; margin: 0 -22px -22px; padding: 14px 22px calc(14px + env(safe-area-inset-bottom, 0px)); background: var(--card); border-top: 2px solid var(--line); border-radius: 0 0 var(--r) var(--r); display: flex; gap: 14px; align-items: center; justify-content: space-between; flex-wrap: wrap }
+  .total .v { font-family: var(--font-display); font-weight: 800; font-size: 1.7rem; color: var(--coral); font-variant-numeric: tabular-nums; line-height: 1 }
+  .total .l { font-size: .78rem; color: var(--muted); font-weight: 800; letter-spacing: .06em; text-transform: uppercase }
+  .aviso { background: var(--azul-claro); border: 2px solid var(--azul); border-radius: 14px; padding: 12px 14px; font-weight: 600 }
+  .aviso.erro { background: var(--rosa-claro); border-color: var(--erro) }
+
+  .sucesso { text-align: center; display: flex; flex-direction: column; gap: 12px; align-items: center; padding: 18px 6px }
+  .sucesso h2 { margin: 0; font-size: 1.9rem }
+  .sucesso p { margin: 0; max-width: 44ch }
+  .sucesso .codigo { font-family: var(--font-display); font-size: 1.2rem; font-weight: 700; background: var(--rosa-claro); border-radius: 99px; padding: 4px 16px }
+  footer { color: var(--muted); font-size: .85rem; text-align: center; padding-block: 0 32px }
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="laco" viewBox="0 0 80 44">
+    <g fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M40 18 C30 4 10 2 8 12 C6 22 22 26 40 18Z"/>
+      <path d="M40 18 C50 4 70 2 72 12 C74 22 58 26 40 18Z"/>
+      <path d="M37 21 L26 41 M43 21 L54 41"/>
+      <circle cx="40" cy="18" r="3.5" fill="currentColor"/>
+    </g>
+  </symbol>
+</svg>
+
+<header class="band gingham">
+  <div class="wrap">
+    <img class="logo-img" id="logo" src="/assets/logo.png" alt="Quitutes da Ruiva — Sabor em cada detalhe" width="300" height="307">
+    <div class="selo" id="selo" hidden>
+      <svg viewBox="0 0 400 460" aria-hidden="true"><path id="selo-fundo" fill="var(--bg)" stroke="var(--coral)" stroke-width="6"/><path id="selo-dentro" fill="none" stroke="var(--rosa)" stroke-width="2.5"/></svg>
+      <div class="conteudo">
+        <h1 class="titulo"><span>Quitutes</span><span>da Ruiva</span></h1>
+        <div class="linha-laco"><svg class="laco" viewBox="0 0 80 44" aria-hidden="true"><use href="#laco"/></svg></div>
+        <div class="slogan">Sabor em cada detalhe</div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<main>
+  <div class="wrap">
+    <div class="intro">
+      <h2 class="titulo">Pré-venda de Panetones</h2>
+      <p>Faça sua encomenda e receba a confirmação no WhatsApp.</p>
+      <span class="pill" id="prazo">Natal 2026</span>
+    </div>
+
+    <section class="card" id="card-form">
+      <form id="form" novalidate>
+        <div class="aviso" id="aviso-edicao" hidden>Você está alterando o pedido <b id="cod-edicao"></b>. Ao enviar, ele é substituído por este.</div>
+
+        <fieldset>
+          <legend><span class="n">1</span> Escolha seus panetones</legend>
+          <div class="menu" id="menu"><div class="carregando">Carregando o cardápio…</div></div>
+          <div class="err" id="err-itens"></div>
+        </fieldset>
+
+        <fieldset>
+          <legend><span class="n">2</span> Seus dados</legend>
+          <div class="row">
+            <label class="f" for="nome">Nome
+              <input type="text" id="nome" autocomplete="name" maxlength="80" placeholder="Como podemos te chamar?">
+              <span class="err" id="err-nome"></span>
+            </label>
+            <label class="f" for="telefone">WhatsApp <small>A confirmação chega aqui</small>
+              <input type="tel" id="telefone" inputmode="numeric" autocomplete="tel" placeholder="(11) 98765-4321">
+              <span class="err" id="err-telefone"></span>
+            </label>
+          </div>
+        </fieldset>
+
+        <fieldset>
+          <legend><span class="n">3</span> Entrega ou retirada</legend>
+          <div class="seg" role="radiogroup" aria-label="Entrega ou retirada">
+            <label><input type="radio" name="tipo" id="tipo-retirada" value="retirada" checked><span>Retirar com a Ruiva<small>Sem custo</small></span></label>
+            <label><input type="radio" name="tipo" id="tipo-entrega" value="entrega"><span>Receber em casa<small>Taxa combinada no WhatsApp</small></span></label>
+          </div>
+          <label class="f" for="endereco" id="box-endereco" hidden>Endereço com bairro
+            <input type="text" id="endereco" autocomplete="street-address" maxlength="200" placeholder="Rua, número, bairro">
+            <span class="err" id="err-endereco"></span>
+          </label>
+          <label class="f" for="data">Quando você quer receber?
+            <select id="data"></select>
+            <span class="err" id="err-data"></span>
+          </label>
+          <label class="f" for="obs">Observações <small>Opcional: presente, alergia, horário</small>
+            <textarea id="obs" maxlength="500" placeholder="Ex.: é para presente, pode colocar um cartãozinho?"></textarea>
+          </label>
+        </fieldset>
+
+        <label class="check" for="optin"><input type="checkbox" id="optin" checked> Aceito receber o cardápio e a confirmação do pedido pelo WhatsApp.</label>
+        <div class="err" id="err-optin"></div>
+
+        <div id="turnstile"></div>
+        <div class="aviso erro" id="erro-geral" hidden role="alert"></div>
+
+        <div class="total">
+          <div><div class="l" id="qtd-l">Total</div><div class="v" id="total">R$ 0,00</div></div>
+          <button type="submit" class="btn" id="enviar">Enviar pedido</button>
+        </div>
+      </form>
+    </section>
+
+    <section class="card" id="card-ok" hidden>
+      <div class="sucesso" role="status">
+        <svg class="laco" viewBox="0 0 80 44" aria-hidden="true"><use href="#laco"/></svg>
+        <h2 class="titulo">Pedido recebido!</h2>
+        <span class="codigo" id="ok-codigo"></span>
+        <p id="ok-texto"></p>
+        <button type="button" class="btn sec" id="novo">Fazer outro pedido</button>
+      </div>
+    </section>
+  </div>
+</main>
+<footer class="wrap">Quitutes da Ruiva · Sabor em cada detalhe</footer>
+
+<script src="/config.js"></script>
+<script src="/assets/form.js"></script>
+</body>
+</html>

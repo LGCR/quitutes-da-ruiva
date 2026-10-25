@@ -1,0 +1,9 @@
+SUPABASE_URL=http://127.0.0.1:54321
+SUPABASE_SERVICE_KEY=coloque-a-service-role-key
+EVOLUTION_URL=https://evolution.seudominio.com.br
+EVOLUTION_KEY=sua-apikey
+WEBHOOK_TOKEN=troque-por-um-token-aleatorio
+ADMIN_EMAILS=ruiva@exemplo.com
+PIX_KEY=pix@quitutesdaruiva.com.br
+RUIVA_PHONE=5511999999999
+EVOLUTION_MOCK=1
