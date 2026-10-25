@@ -33,18 +33,41 @@
 
   // Cardápio ----------------------------------------------------------------
 
+  // Tamanhos do mesmo sabor (500 g, 100 g) ficam juntos num card só
+  function porSabor() {
+    const grupos = new Map();
+    for (const p of produtos) {
+      const k = p.sabor || p.nome;
+      if (!grupos.has(k)) grupos.set(k, []);
+      grupos.get(k).push(p);
+    }
+    return [...grupos];
+  }
+
   function renderMenu() {
-    $("menu").innerHTML = produtos.map((p) => `
-      <div class="item ${qtd[p.id] ? "on" : ""}">
-        <div>
-          <h3>${esc(p.nome)} ${p.peso_g ? `<span class="peso">${p.peso_g} g</span>` : ""}</h3>
-          ${p.descricao ? `<p>${esc(p.descricao)}</p>` : ""}
-          <span class="preco">${brl(p.preco_centavos)}</span>
-        </div>
-        <div class="step" role="group" aria-label="Quantidade de ${esc(p.nome)}">
-          <button type="button" id="menos-${p.id}" data-id="${p.id}" data-d="-1" aria-label="Menos ${esc(p.nome)}">−</button>
-          <output aria-live="polite">${qtd[p.id] || 0}</output>
-          <button type="button" id="mais-${p.id}" data-id="${p.id}" data-d="1" aria-label="Mais ${esc(p.nome)}">+</button>
+    if (!produtos.length) {
+      $("menu").innerHTML = `<div class="carregando">O cardápio abre em breve. Volte mais tarde ou chame a Ruiva no WhatsApp.</div>`;
+      return;
+    }
+    $("menu").innerHTML = porSabor().map(([sabor, ps]) => `
+      <div class="item ${ps.some((p) => qtd[p.id]) ? "on" : ""}">
+        <h3>${esc(sabor)}</h3>
+        ${ps[0].descricao ? `<p>${esc(ps[0].descricao)}</p>` : ""}
+        <div class="tamanhos">
+          ${ps.map((p) => {
+            const rotulo = p.tamanho || (p.peso_g ? `${p.peso_g} g` : "");
+            return `
+            <div class="tam">
+              ${rotulo ? `<span class="peso">${esc(rotulo)}</span>` : ""}
+              <span class="preco">${brl(p.preco_centavos)}</span>
+              <div class="step" role="group" aria-label="Quantidade de ${esc(p.nome)}">
+                <button type="button" id="menos-${p.id}" data-id="${p.id}" data-d="-1" aria-label="Menos ${esc(p.nome)}">−</button>
+                <output aria-live="polite">${qtd[p.id] || 0}</output>
+                <button type="button" id="mais-${p.id}" data-id="${p.id}" data-d="1" aria-label="Mais ${esc(p.nome)}">+</button>
+              </div>
+              ${p.qtd_minima > 1 ? `<small class="min">mín. ${p.qtd_minima}</small>` : ""}
+            </div>`;
+          }).join("")}
         </div>
       </div>`).join("");
   }

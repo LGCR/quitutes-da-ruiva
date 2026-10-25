@@ -17,6 +17,7 @@
   --ok: #2F7D55;
   --erro: #B3261E;
   --sobre-coral: #FFFFFF;
+  --sobre-azul: #FFFFFF;
   --font-display: "Fraunces", "Georgia", "Times New Roman", serif;
   --font-body: "Nunito", system-ui, -apple-system, "Segoe UI", sans-serif;
   --r: 18px;
@@ -27,7 +28,7 @@
     --azul: #7FA6CF; --azul-forte: #A9C8E8; --azul-claro: #1F2A36;
     --gingham-claro: rgba(127, 166, 207, .22); --gingham-escuro: rgba(127, 166, 207, .22);
     --bg: #1E1817; --card: #282020; --fg: #F6E8E4; --muted: #BBA19B; --line: #403230;
-    --ok: #6DD39A; --erro: #FF8A80; --sobre-coral: #2A1512;
+    --ok: #6DD39A; --erro: #FF8A80; --sobre-coral: #2A1512; --sobre-azul: #16202B;
     color-scheme: dark;
   }
 }
@@ -36,7 +37,7 @@
   --azul: #7FA6CF; --azul-forte: #A9C8E8; --azul-claro: #1F2A36;
   --gingham-claro: rgba(127, 166, 207, .22); --gingham-escuro: rgba(127, 166, 207, .22);
   --bg: #1E1817; --card: #282020; --fg: #F6E8E4; --muted: #BBA19B; --line: #403230;
-  --ok: #6DD39A; --erro: #FF8A80; --sobre-coral: #2A1512;
+  --ok: #6DD39A; --erro: #FF8A80; --sobre-coral: #2A1512; --sobre-azul: #16202B;
   color-scheme: dark;
 }
 

@@ -1,55 +1,48 @@
--- Dados de EXEMPLO. Troque pelos sabores, preços e receitas reais no painel admin.
-
-insert into products (id, nome, descricao, peso_g, preco_centavos, qtd_minima, ordem) values
-  ('tradicional', 'Tradicional',            'Frutas cristalizadas e uvas-passas, fermentação natural', 750, 6990, 1, 1),
-  ('chocotone',   'Chocotone',              'Gotas de chocolate meio amargo',                         750, 7490, 1, 2),
-  ('doceleite',   'Doce de leite & nozes',  'Recheio cremoso com nozes tostadas',                     800, 8990, 1, 3),
-  ('pistache',    'Pistache',               'Creme de pistache e cobertura de chocolate branco',      800, 10490, 1, 4),
-  ('mini',        'Mini panetone',          'Ótimo para lembrancinha (mín. 6 unidades)',              100, 1490, 6, 5);
-
-insert into ingredients (nome, unidade, tamanho_embalagem, nome_embalagem) values
-  ('Farinha de trigo',        'g',  5000, 'pacote 5 kg'),
-  ('Açúcar',                  'g',  1000, 'pacote 1 kg'),
-  ('Manteiga',                'g',   500, 'tablete 500 g'),
-  ('Ovos',                    'un',   30, 'bandeja 30 un'),
-  ('Fermento natural (levain)', 'g', null, null),
-  ('Frutas cristalizadas',    'g',  1000, 'pacote 1 kg'),
-  ('Uva-passa',               'g',   500, 'pacote 500 g'),
-  ('Gotas de chocolate',      'g',  1000, 'pacote 1 kg'),
-  ('Doce de leite',           'g',  1000, 'balde 1 kg'),
-  ('Nozes',                   'g',   500, 'pacote 500 g'),
-  ('Creme de pistache',       'g',   600, 'pote 600 g'),
-  ('Chocolate branco',        'g',  1000, 'barra 1 kg'),
-  ('Forma de panetone 750 g', 'un',   10, 'pacote 10 un'),
-  ('Forma de mini panetone',  'un',   50, 'pacote 50 un');
-
--- Receita base de 750 g: ~300 g farinha, 90 g açúcar, 90 g manteiga, 3 ovos, 60 g levain
-insert into recipe_items (product_id, ingredient_id, qtd_por_unidade)
-select r.product_id, i.id, r.qtd
-from (values
-  ('tradicional', 'Farinha de trigo', 300), ('tradicional', 'Açúcar', 90), ('tradicional', 'Manteiga', 90),
-  ('tradicional', 'Ovos', 3), ('tradicional', 'Fermento natural (levain)', 60),
-  ('tradicional', 'Frutas cristalizadas', 120), ('tradicional', 'Uva-passa', 80), ('tradicional', 'Forma de panetone 750 g', 1),
-
-  ('chocotone', 'Farinha de trigo', 300), ('chocotone', 'Açúcar', 90), ('chocotone', 'Manteiga', 90),
-  ('chocotone', 'Ovos', 3), ('chocotone', 'Fermento natural (levain)', 60),
-  ('chocotone', 'Gotas de chocolate', 180), ('chocotone', 'Forma de panetone 750 g', 1),
-
-  ('doceleite', 'Farinha de trigo', 300), ('doceleite', 'Açúcar', 80), ('doceleite', 'Manteiga', 90),
-  ('doceleite', 'Ovos', 3), ('doceleite', 'Fermento natural (levain)', 60),
-  ('doceleite', 'Doce de leite', 200), ('doceleite', 'Nozes', 60), ('doceleite', 'Forma de panetone 750 g', 1),
-
-  ('pistache', 'Farinha de trigo', 300), ('pistache', 'Açúcar', 80), ('pistache', 'Manteiga', 90),
-  ('pistache', 'Ovos', 3), ('pistache', 'Fermento natural (levain)', 60),
-  ('pistache', 'Creme de pistache', 180), ('pistache', 'Chocolate branco', 80), ('pistache', 'Forma de panetone 750 g', 1),
-
-  ('mini', 'Farinha de trigo', 40), ('mini', 'Açúcar', 12), ('mini', 'Manteiga', 12),
-  ('mini', 'Ovos', 0.4), ('mini', 'Fermento natural (levain)', 8),
-  ('mini', 'Gotas de chocolate', 20), ('mini', 'Forma de mini panetone', 1)
-) as r(product_id, ingrediente, qtd)
-join ingredients i on i.nome = r.ingrediente;
+-- Dados iniciais: datas de entrega + cardápio de Natal (mesmo conteúdo de cardapio_natal.sql).
 
 insert into datas_entrega (id, rotulo, ordem) values
   ('12-13-dez', 'Sábado 12 ou domingo 13 de dezembro', 1),
   ('19-20-dez', 'Sábado 19 ou domingo 20 de dezembro', 2),
   ('23-dez',     'Quarta, 23 de dezembro',              3);
+
+-- Cardápio de Natal 2026 (arte em web/assets/cardapio.jpg): 5 sabores × 500 g e 100 g.
+-- Pode rodar mais de uma vez. Os produtos entram INATIVOS e com preço 0:
+-- preencha os preços no painel (/admin → Cardápio e receitas) e marque "Ativo".
+
+update products set ativo = false, ordem = ordem + 100
+ where id in ('tradicional', 'chocotone', 'doceleite', 'pistache', 'mini') and ordem < 100;
+
+insert into products (id, sabor, tamanho, nome, descricao, peso_g, preco_centavos, qtd_minima, ativo, ordem) values
+  ('frutas-500',               'Panetone de Frutas',                  '500 g', 'Panetone de Frutas 500 g',                  'Frutas cristalizadas e uvas-passas', 500, 0, 1, false, 1),
+  ('frutas-100',               'Panetone de Frutas',                  '100 g', 'Panetone de Frutas 100 g',                  'Frutas cristalizadas e uvas-passas', 100, 0, 1, false, 2),
+  ('chocotone-500',            'Chocotone',                           '500 g', 'Chocotone 500 g',                           'Gotas de chocolate',                 500, 0, 1, false, 3),
+  ('chocotone-100',            'Chocotone',                           '100 g', 'Chocotone 100 g',                           'Gotas de chocolate',                 100, 0, 1, false, 4),
+  ('pistache-500',             'Panetone de Brigadeiro de Pistache',  '500 g', 'Panetone de Brigadeiro de Pistache 500 g',  'Cobertura e recheio de brigadeiro de pistache', 500, 0, 1, false, 5),
+  ('pistache-100',             'Panetone de Brigadeiro de Pistache',  '100 g', 'Panetone de Brigadeiro de Pistache 100 g',  'Cobertura e recheio de brigadeiro de pistache', 100, 0, 1, false, 6),
+  ('chocotone-brigadeiro-500', 'Chocotone com Recheio de Brigadeiro', '500 g', 'Chocotone com Recheio de Brigadeiro 500 g', 'Recheio de brigadeiro e granulado',  500, 0, 1, false, 7),
+  ('chocotone-brigadeiro-100', 'Chocotone com Recheio de Brigadeiro', '100 g', 'Chocotone com Recheio de Brigadeiro 100 g', 'Recheio de brigadeiro e granulado',  100, 0, 1, false, 8),
+  ('chocotone-ninho-500',      'Chocotone com Recheio de Leite Ninho', '500 g', 'Chocotone com Recheio de Leite Ninho 500 g', 'Recheio e cobertura de Leite Ninho', 500, 0, 1, false, 9),
+  ('chocotone-ninho-100',      'Chocotone com Recheio de Leite Ninho', '100 g', 'Chocotone com Recheio de Leite Ninho 100 g', 'Recheio e cobertura de Leite Ninho', 100, 0, 1, false, 10)
+on conflict (id) do update set
+  sabor = excluded.sabor, tamanho = excluded.tamanho, nome = excluded.nome,
+  descricao = excluded.descricao, peso_g = excluded.peso_g, ordem = excluded.ordem;
+-- preço e "ativo" não são sobrescritos, para não apagar o que já foi preenchido no painel
+
+-- Ingredientes que esses sabores usam. As receitas (quanto vai em cada panetone)
+-- são cadastradas no painel; sem receita, o sabor não entra na lista de compras.
+insert into ingredients (nome, unidade, tamanho_embalagem, nome_embalagem) values
+  ('Farinha de trigo',           'g',  5000, 'pacote 5 kg'),
+  ('Açúcar',                     'g',  1000, 'pacote 1 kg'),
+  ('Manteiga',                   'g',   500, 'tablete 500 g'),
+  ('Ovos',                       'un',   30, 'bandeja 30 un'),
+  ('Fermento natural (levain)',  'g',  null, null),
+  ('Frutas cristalizadas',       'g',  1000, 'pacote 1 kg'),
+  ('Uva-passa',                  'g',   500, 'pacote 500 g'),
+  ('Gotas de chocolate',         'g',  1000, 'pacote 1 kg'),
+  ('Brigadeiro de pistache',     'g',  1000, 'balde 1 kg'),
+  ('Brigadeiro',                 'g',  1000, 'balde 1 kg'),
+  ('Chocolate granulado',        'g',  1000, 'pacote 1 kg'),
+  ('Recheio de Leite Ninho',     'g',  1000, 'balde 1 kg'),
+  ('Forma de panetone 500 g',    'un',   10, 'pacote 10 un'),
+  ('Forma de panetone 100 g',    'un',   50, 'pacote 50 un')
+on conflict (nome) do nothing;

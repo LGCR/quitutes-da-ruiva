@@ -19,7 +19,7 @@ app.use("/api/*", async (c, next) => {
 });
 
 app.use("/api/*", async (c, next) => {
-  c.set("db", db.criarDb(c.env.SUPABASE_URL, c.env.SUPABASE_SERVICE_KEY));
+  c.set("db", db.criarDb(c.env.SUPABASE_URL, (c.env.SUPABASE_SECRET_KEY || c.env.SUPABASE_SERVICE_KEY)!));
   await next();
 });
 
@@ -260,6 +260,8 @@ admin.put("/produtos/:id", async (c) => {
     nome: String(b.nome ?? "").trim(),
     descricao: b.descricao ? String(b.descricao) : null,
     peso_g: b.peso_g ? Number(b.peso_g) : null,
+    sabor: b.sabor ? String(b.sabor).trim() : null,
+    tamanho: b.tamanho ? String(b.tamanho).trim() : null,
     preco_centavos: Math.round(Number(b.preco_centavos)),
     qtd_minima: Math.max(1, Math.floor(Number(b.qtd_minima ?? 1))),
     ativo: b.ativo !== false,

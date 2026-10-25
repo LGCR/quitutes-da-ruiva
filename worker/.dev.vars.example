@@ -1,5 +1,5 @@
 SUPABASE_URL=http://127.0.0.1:54321
-SUPABASE_SERVICE_KEY=coloque-a-service-role-key
+SUPABASE_SECRET_KEY=coloque-a-secret-key
 EVOLUTION_URL=https://evolution.seudominio.com.br
 EVOLUTION_KEY=sua-apikey
 WEBHOOK_TOKEN=troque-por-um-token-aleatorio

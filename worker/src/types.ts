@@ -1,6 +1,8 @@
 export interface Env {
   SUPABASE_URL: string;
-  SUPABASE_SERVICE_KEY: string;
+  /** secret key (sb_secret_...) ou a service_role key antiga */
+  SUPABASE_SECRET_KEY?: string;
+  SUPABASE_SERVICE_KEY?: string;
   EVOLUTION_URL: string;
   EVOLUTION_KEY: string;
   EVOLUTION_INSTANCE: string;
@@ -24,6 +26,8 @@ export interface Produto {
   nome: string;
   descricao: string | null;
   peso_g: number | null;
+  sabor: string | null;
+  tamanho: string | null;
   preco_centavos: number;
   qtd_minima: number;
   ativo: boolean;

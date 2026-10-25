@@ -6,7 +6,7 @@ import type { Conversa, Pedido, Produto } from "../src/types";
 import { escolha, lerWebhook } from "../src/webhook";
 
 const produtos: Produto[] = [
-  { id: "chocotone", nome: "Chocotone", descricao: null, peso_g: 750, preco_centavos: 7490, qtd_minima: 1, ativo: true, ordem: 1 },
+  { id: "chocotone", nome: "Chocotone", descricao: null, peso_g: 750, sabor: null, tamanho: null, preco_centavos: 7490, qtd_minima: 1, ativo: true, ordem: 1 },
 ];
 
 function novoPedido(): Pedido {

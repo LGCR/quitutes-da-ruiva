@@ -132,9 +132,9 @@
     <section class="aba" id="aba-cardapio" hidden>
       <div class="painel">
         <h3>Sabores e preços</h3>
-        <p class="dica">O código do sabor não muda depois de criado. Desative em vez de apagar, para não perder o histórico.</p>
+        <p class="dica">Cada tamanho é uma linha. Linhas com o mesmo <b>Sabor</b> aparecem juntas no formulário. Preencha o preço e marque <b>Ativo</b> para o item aparecer no site. O código não muda depois de criado; desative em vez de apagar.</p>
         <div class="tabela"><table>
-          <thead><tr><th>Código</th><th>Nome</th><th>Descrição</th><th class="num">Preço (R$)</th><th class="num">Peso (g)</th><th class="num">Mín.</th><th class="num">Ordem</th><th>Ativo</th><th></th></tr></thead>
+          <thead><tr><th>Código</th><th>Sabor</th><th>Tamanho</th><th>Nome no pedido</th><th>Descrição</th><th class="num">Preço (R$)</th><th class="num">Peso (g)</th><th class="num">Mín.</th><th class="num">Ordem</th><th>Ativo</th><th></th></tr></thead>
           <tbody id="t-produtos"></tbody>
         </table></div>
       </div>
@@ -173,7 +173,7 @@
   </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.min.js"></script>
 <script src="/config.js"></script>
 <script>
 (() => {
@@ -376,7 +376,9 @@
     const linhaProduto = (p, novo) => `
       <tr data-id="${esc(p.id || "")}" ${novo ? "data-novo" : ""}>
         <td>${novo ? `<input data-k="id" placeholder="ex.: nutella" size="10">` : `<b>${esc(p.id)}</b>`}</td>
-        <td><input data-k="nome" value="${esc(p.nome)}" size="14"></td>
+        <td><input data-k="sabor" value="${esc(p.sabor)}" size="16" placeholder="ex.: Chocotone"></td>
+        <td><input data-k="tamanho" value="${esc(p.tamanho)}" size="6" placeholder="500 g"></td>
+        <td><input data-k="nome" value="${esc(p.nome)}" size="16" placeholder="Chocotone 500 g"></td>
         <td><input data-k="descricao" value="${esc(p.descricao)}" size="22"></td>
         <td class="num"><input data-k="preco" type="number" step="0.01" min="0" value="${p.preco_centavos != null ? (p.preco_centavos / 100).toFixed(2) : ""}" style="width:90px"></td>
         <td class="num"><input data-k="peso_g" type="number" min="0" value="${p.peso_g ?? ""}" style="width:70px"></td>
@@ -421,7 +423,7 @@
     const id = tr.hasAttribute("data-novo") ? (val(tr, "id") || "").toLowerCase() : tr.dataset.id;
     try {
       await salvar(`/produtos/${encodeURIComponent(id)}`, {
-        nome: val(tr, "nome"), descricao: val(tr, "descricao"), preco_centavos: Math.round(Number(String(val(tr, "preco")).replace(",", ".")) * 100),
+        sabor: val(tr, "sabor"), tamanho: val(tr, "tamanho"), nome: val(tr, "nome"), descricao: val(tr, "descricao"), preco_centavos: Math.round(Number(String(val(tr, "preco")).replace(",", ".")) * 100),
         peso_g: val(tr, "peso_g"), qtd_minima: val(tr, "qtd_minima"), ordem: val(tr, "ordem"), ativo: val(tr, "ativo"),
       });
       toast("Sabor salvo");

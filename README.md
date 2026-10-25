@@ -35,14 +35,18 @@ O bot **só responde números que fizeram pedido pelo formulário**. As outras c
 ### 1. Supabase
 
 1. Crie um projeto em supabase.com.
-2. No **SQL Editor**, rode `supabase/migrations/20261025000000_init.sql` e depois `supabase/seed.sql`.
-   - O seed tem sabores, preços e receitas **de exemplo**. Ajuste tudo pelo painel depois.
+2. No **SQL Editor**, rode nesta ordem:
+   1. `supabase/migrations/20261025000000_init.sql`
+   2. `supabase/migrations/20261026000000_tamanhos.sql`
+   3. `supabase/seed.sql`: datas de entrega e o cardápio de Natal (5 sabores × 500 g e 100 g)
+   - Os produtos entram **inativos e com preço 0**. No painel, preencha o preço, marque "Ativo" e cadastre as receitas.
+   - Se você já tinha rodado o seed antigo, rode só a migração `20261026...` e depois `supabase/cardapio_natal.sql`. Os sabores de exemplo são desativados.
    - Se preferir o CLI: `supabase link --project-ref SEU_REF` e depois `supabase db push`.
 3. Em **Authentication → Users → Add user**, crie o usuário da Ruiva com e-mail e senha. Desative o cadastro público em Authentication → Providers → Email → "Allow new users to sign up".
 4. Anote, em Project Settings → API:
    - a `URL`
-   - a `anon key`, que é pública e vai no `config.js`
-   - a `service_role key`, que é **secreta** e fica só no Worker
+   - a `publishable key` (`sb_publishable_...`), que é pública e vai no `config.js`
+   - a `secret key` (`sb_secret_...`), que é **secreta** e fica só no Worker. Nunca coloque no código nem no `config.js`.
 
 ### 2. Worker (API)
 
@@ -51,7 +55,7 @@ cd worker
 npm install
 npx wrangler login
 npx wrangler secret put SUPABASE_URL          # https://xxxx.supabase.co
-npx wrangler secret put SUPABASE_SERVICE_KEY  # service_role key
+npx wrangler secret put SUPABASE_SECRET_KEY   # sb_secret_...
 npx wrangler secret put EVOLUTION_URL         # https://evolution.seudominio.com.br
 npx wrangler secret put EVOLUTION_KEY         # apikey global ou da instância
 npx wrangler secret put WEBHOOK_TOKEN         # gere com: openssl rand -hex 24
@@ -64,7 +68,7 @@ npx wrangler deploy
 No `wrangler.toml`, ajuste:
 - `EVOLUTION_INSTANCE`: o nome da instância na Evolution.
 - `SITE_URL`: o endereço público do formulário. É usado no link "Quero alterar".
-- `CARDAPIO_IMAGE_URL`: opcional. Com uma URL pública de imagem do cardápio, ex. `https://encomendas.../assets/cardapio.png`, o cardápio vai como foto. Sem ela, vai como texto gerado a partir dos sabores ativos.
+- `CARDAPIO_IMAGE_URL`: a arte do cardápio publicada pelo Pages (`<SITE_URL>/assets/cardapio.jpg`). Ela vai como foto no WhatsApp. Se ficar vazia, o cardápio vai como texto gerado a partir dos sabores ativos.
 - `routes`: coloque o Worker em `seu-dominio/api/*` para o site e a API ficarem no mesmo domínio.
 
 ### 3. Site (Cloudflare Pages)

@@ -37,19 +37,22 @@
   fieldset { border: 0; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 12px; min-width: 0 }
   legend { font-family: var(--font-display); font-weight: 700; font-size: 1.35rem; color: var(--coral); padding: 0; margin-bottom: 8px; display: flex; align-items: center; gap: 10px }
   legend .n { display: inline-grid; place-items: center; width: 30px; height: 30px; border-radius: 50%; background: var(--rosa); color: #fff; font-family: var(--font-body); font-size: .95rem; font-weight: 800 }
-  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px }
+  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; align-items: start }
   @media (max-width: 560px) { .row { grid-template-columns: 1fr } }
   label.f { display: flex; flex-direction: column; gap: 6px; font-weight: 700; font-size: .92rem; min-width: 0 }
   label.f small { font-weight: 600; color: var(--muted) }
 
   .menu { display: flex; flex-direction: column; border: 2px dashed var(--line); border-radius: 16px; overflow: hidden }
-  .item { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 14px 16px; border-top: 2px dashed var(--line) }
+  .item { display: flex; flex-direction: column; gap: 4px; padding: 14px 16px; border-top: 2px dashed var(--line) }
   .item:first-child { border-top: 0 }
   .item.on { background: var(--rosa-claro) }
-  .item h3 { margin: 0; font-size: 1.05rem; font-weight: 800; display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap }
-  .item .peso { font-weight: 700; font-size: .8rem; color: var(--muted) }
-  .item p { margin: 2px 0 0; color: var(--muted); font-size: .9rem }
-  .item .preco { font-weight: 800; color: var(--coral); font-variant-numeric: tabular-nums; margin-top: 4px; display: block }
+  .item h3 { margin: 0; font-family: var(--font-display); font-size: 1.15rem; font-weight: 700; color: var(--coral); text-wrap: balance }
+  .item p { margin: 0; color: var(--muted); font-size: .9rem }
+  .tamanhos { display: flex; flex-direction: column; gap: 8px; margin-top: 6px }
+  .tam { display: grid; grid-template-columns: 4.6rem minmax(0, 1fr) auto; gap: 10px; align-items: center }
+  .tam .peso { justify-self: start; background: var(--azul-forte); color: var(--sobre-azul); font-weight: 800; font-size: .85rem; padding: 3px 12px; border-radius: 99px; font-variant-numeric: tabular-nums }
+  .tam .preco { font-weight: 800; color: var(--fg); font-variant-numeric: tabular-nums }
+  .tam .min { grid-column: 1 / -1; color: var(--muted); font-weight: 700; margin-top: -4px }
   .step { display: flex; align-items: center; background: var(--card); border: 2px solid var(--rosa); border-radius: 99px; overflow: hidden }
   .step button { appearance: none; border: 0; background: none; cursor: pointer; width: 40px; height: 40px; font-size: 1.3rem; font-weight: 800; color: var(--coral) }
   .step button:hover { background: var(--rosa-claro) }
@@ -113,6 +116,7 @@
       <h2 class="titulo">Pré-venda de Panetones</h2>
       <p>Faça sua encomenda e receba a confirmação no WhatsApp.</p>
       <span class="pill" id="prazo">Natal 2026</span>
+      <a class="btn sec" href="/assets/cardapio.jpg" target="_blank" rel="noopener">Ver o cardápio</a>
     </div>
 
     <section class="card" id="card-form">
@@ -132,8 +136,9 @@
               <input type="text" id="nome" autocomplete="name" maxlength="80" placeholder="Como podemos te chamar?">
               <span class="err" id="err-nome"></span>
             </label>
-            <label class="f" for="telefone">WhatsApp <small>A confirmação chega aqui</small>
+            <label class="f" for="telefone">WhatsApp
               <input type="tel" id="telefone" inputmode="numeric" autocomplete="tel" placeholder="(11) 98765-4321">
+              <small>A confirmação do pedido chega aqui</small>
               <span class="err" id="err-telefone"></span>
             </label>
           </div>

@@ -24,7 +24,7 @@ export function legendaCardapio(nome: string) {
 export function cardapioTexto(nome: string, produtos: Produto[]) {
   const linhas = produtos
     .filter((p) => p.ativo)
-    .map((p) => `• *${p.nome}*${p.peso_g ? ` (${p.peso_g} g)` : ""} — ${brl(p.preco_centavos)}`);
+    .map((p) => `• *${p.nome}*${p.peso_g && !p.tamanho ? ` (${p.peso_g} g)` : ""} — ${brl(p.preco_centavos)}`);
   return `${legendaCardapio(nome)}\n\n🎄 *Cardápio de Natal*\n${linhas.join("\n")}`;
 }
 

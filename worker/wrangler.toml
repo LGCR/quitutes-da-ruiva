@@ -11,13 +11,13 @@ SITE_URL = "https://encomendas.quitutesdaruiva.com.br"
 # Origens extras permitidas (separadas por vírgula), ex.: o domínio *.pages.dev durante os testes
 ALLOWED_ORIGINS = "http://localhost:5173,http://127.0.0.1:5173"
 EVOLUTION_INSTANCE = "quitutes"
-# URL pública da imagem do cardápio (opcional). Sem ela, o cardápio vai em texto.
-CARDAPIO_IMAGE_URL = ""
+# URL pública da imagem do cardápio (web/assets/cardapio.jpg publicada no Pages). Vazio = cardápio em texto.
+CARDAPIO_IMAGE_URL = "https://encomendas.quitutesdaruiva.com.br/assets/cardapio.jpg"
 # "1" = não chama a Evolution, só registra no log (bom para testar)
 EVOLUTION_MOCK = "0"
 
 # Secrets (configure com `npx wrangler secret put NOME`):
-#   SUPABASE_URL, SUPABASE_SERVICE_KEY
+#   SUPABASE_URL, SUPABASE_SECRET_KEY (sb_secret_...; a service_role antiga também funciona em SUPABASE_SERVICE_KEY)
 #   EVOLUTION_URL, EVOLUTION_KEY
 #   WEBHOOK_TOKEN        token aleatório que vai na URL do webhook
 #   ADMIN_EMAILS         e-mails que podem entrar no painel, separados por vírgula
