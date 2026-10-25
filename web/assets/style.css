@@ -11,6 +11,7 @@
   --gingham-escuro: rgba(111, 149, 188, .45);
   --bg: #FBF5EC;           /* creme do fundo da logo */
   --card: #FFFDF9;
+  --papel: #FBF0DE;        /* papel dos cartões do cardápio */
   --fg: #4A2B2E;
   --muted: #8C6F6A;
   --line: #EEDCD3;
@@ -19,6 +20,7 @@
   --sobre-coral: #FFFFFF;
   --sobre-azul: #FFFFFF;
   --font-display: "Fraunces", "Georgia", "Times New Roman", serif;
+  --font-script: "Caveat", "Segoe Script", "Bradley Hand", cursive;
   --font-body: "Nunito", system-ui, -apple-system, "Segoe UI", sans-serif;
   --r: 18px;
 }
@@ -27,7 +29,7 @@
     --coral: #F08A78; --coral-escuro: #F6A596; --rosa: #E8A3A3; --rosa-claro: #3A2527;
     --azul: #7FA6CF; --azul-forte: #A9C8E8; --azul-claro: #1F2A36;
     --gingham-claro: rgba(127, 166, 207, .22); --gingham-escuro: rgba(127, 166, 207, .22);
-    --bg: #1E1817; --card: #282020; --fg: #F6E8E4; --muted: #BBA19B; --line: #403230;
+    --bg: #1E1817; --card: #282020; --papel: #312624; --fg: #F6E8E4; --muted: #BBA19B; --line: #403230;
     --ok: #6DD39A; --erro: #FF8A80; --sobre-coral: #2A1512; --sobre-azul: #16202B;
     color-scheme: dark;
   }
@@ -36,7 +38,7 @@
   --coral: #F08A78; --coral-escuro: #F6A596; --rosa: #E8A3A3; --rosa-claro: #3A2527;
   --azul: #7FA6CF; --azul-forte: #A9C8E8; --azul-claro: #1F2A36;
   --gingham-claro: rgba(127, 166, 207, .22); --gingham-escuro: rgba(127, 166, 207, .22);
-  --bg: #1E1817; --card: #282020; --fg: #F6E8E4; --muted: #BBA19B; --line: #403230;
+  --bg: #1E1817; --card: #282020; --papel: #312624; --fg: #F6E8E4; --muted: #BBA19B; --line: #403230;
   --ok: #6DD39A; --erro: #FF8A80; --sobre-coral: #2A1512; --sobre-azul: #16202B;
   color-scheme: dark;
 }

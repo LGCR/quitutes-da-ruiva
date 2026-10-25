@@ -10,7 +10,7 @@
 <link rel="icon" href="/assets/logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,600..800;1,9..144,600..800&family=Nunito:wght@400;600;700;800&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,600..800;1,9..144,600..800&family=Caveat:wght@600;700&family=Nunito:wght@400;600;700;800&display=swap">
 <link rel="stylesheet" href="/assets/style.css">
 <style>
   header.band { border-bottom: 6px solid var(--coral) }
@@ -42,12 +42,32 @@
   label.f { display: flex; flex-direction: column; gap: 6px; font-weight: 700; font-size: .92rem; min-width: 0 }
   label.f small { font-weight: 600; color: var(--muted) }
 
-  .menu { display: flex; flex-direction: column; border: 2px dashed var(--line); border-radius: 16px; overflow: hidden }
-  .item { display: flex; flex-direction: column; gap: 4px; padding: 14px 16px; border-top: 2px dashed var(--line) }
-  .item:first-child { border-top: 0 }
-  .item.on { background: var(--rosa-claro) }
-  .item h3 { margin: 0; font-family: var(--font-display); font-size: 1.15rem; font-weight: 700; color: var(--coral); text-wrap: balance }
-  .item p { margin: 0; color: var(--muted); font-size: .9rem }
+  /* Cardápio no estilo da arte: cartões de papel com borda tracejada, foto, nome e etiquetas de tamanho */
+  .cardapio-topo { display: flex; align-items: center; justify-content: space-between; gap: 10px 16px; flex-wrap: wrap; margin-bottom: 4px }
+  .faixa { font-family: var(--font-script); font-weight: 700; font-size: 2.1rem; line-height: 1; color: var(--sobre-coral); background: var(--coral);
+    padding: 8px 26px 10px; border-radius: 18px; transform: rotate(-2.5deg); box-shadow: 0 0 0 3px var(--card), 0 0 0 5px var(--coral) }
+  .ruivice { font-family: var(--font-script); font-weight: 600; font-size: 1.55rem; line-height: 1.1; color: var(--coral); margin: 0; text-align: right; flex: 1; min-width: 12ch }
+  @media (max-width: 599px) { .cardapio-topo { flex-direction: column; align-items: flex-start } .ruivice { text-align: left; min-width: 0 } }
+  .menu { display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px }
+  @media (min-width: 600px) { .menu { grid-template-columns: repeat(2, minmax(0, 1fr)) } }
+  .sabor { position: relative; background: var(--papel); border: 2px dashed var(--rosa); border-radius: 22px; padding: 14px;
+    display: grid; grid-template-columns: 96px minmax(0, 1fr); grid-template-areas: "foto info" "tam tam"; gap: 10px 12px; align-items: center }
+  .sabor.on { border-style: solid; border-color: var(--coral); background: var(--rosa-claro) }
+  .sabor .foto { grid-area: foto; width: 100%; height: auto; aspect-ratio: 4 / 3; object-fit: cover;
+    -webkit-mask-image: radial-gradient(ellipse 50% 50% at center, #000 70%, transparent 100%); mask-image: radial-gradient(ellipse 50% 50% at center, #000 70%, transparent 100%) }
+  .sabor .info { grid-area: info; min-width: 0 }
+  .sabor h3 { margin: 0; font-family: var(--font-display); font-size: 1.15rem; font-weight: 700; line-height: 1.15; color: var(--coral); text-wrap: balance }
+  .sabor p { margin: 4px 0 0; color: var(--muted); font-size: .88rem }
+  .sabor .tamanhos { grid-area: tam }
+  .sabor .azevinho { position: absolute; top: 8px; right: 10px; width: 30px; height: 22px }
+  .sabor .azevinho.esq { right: auto; left: 10px; transform: scaleX(-1); display: none }
+  @media (min-width: 600px) {
+    .sabor { grid-template-columns: minmax(0, 1fr); grid-template-areas: "foto" "info" "tam"; justify-items: center; text-align: center; align-content: start }
+    .sabor .foto { width: 170px }
+    .sabor .tamanhos { width: 100% }
+    .sabor .azevinho.esq { display: block }
+  }
+  .nota { margin: 0; align-self: center; text-align: center; font-family: var(--font-script); font-weight: 600; font-size: 1.6rem; line-height: 1.15; color: var(--coral); padding: 10px 16px; text-wrap: balance }
   .tamanhos { display: flex; flex-direction: column; gap: 8px; margin-top: 6px }
   .tam { display: grid; grid-template-columns: 4.6rem minmax(0, 1fr) auto; gap: 10px; align-items: center }
   .tam .peso { justify-self: start; background: var(--azul-forte); color: var(--sobre-azul); font-weight: 800; font-size: .85rem; padding: 3px 12px; border-radius: 99px; font-variant-numeric: tabular-nums }
@@ -86,6 +106,11 @@
 <body>
 
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="azevinho" viewBox="0 0 30 22">
+    <path d="M14 13 C10 6 4 5 1 7 C4 8 4 11 2 13 C6 13 8 15 9 18 C10 15 12 14 14 13Z" fill="#5E8C61"/>
+    <path d="M16 12 C19 5 25 3 29 5 C26 6 26 9 28 11 C24 11 22 13 21 16 C20 13 18 12 16 12Z" fill="#4E7A52"/>
+    <circle cx="14" cy="15" r="2.6" fill="#C9503F"/><circle cx="18" cy="16.5" r="2.6" fill="#B8402F"/><circle cx="16" cy="12.5" r="2.4" fill="#D9604D"/>
+  </symbol>
   <symbol id="laco" viewBox="0 0 80 44">
     <g fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round">
       <path d="M40 18 C30 4 10 2 8 12 C6 22 22 26 40 18Z"/>
@@ -125,6 +150,10 @@
 
         <fieldset>
           <legend><span class="n">1</span> Escolha seus panetones</legend>
+          <div class="cardapio-topo">
+            <span class="faixa">Nosso Cardápio</span>
+            <p class="ruivice">O sabor do Natal também tem ruivice! ♥</p>
+          </div>
           <div class="menu" id="menu"><div class="carregando">Carregando o cardápio…</div></div>
           <div class="err" id="err-itens"></div>
         </fieldset>

@@ -49,10 +49,16 @@
       $("menu").innerHTML = `<div class="carregando">O cardápio abre em breve. Volte mais tarde ou chame a Ruiva no WhatsApp.</div>`;
       return;
     }
-    $("menu").innerHTML = porSabor().map(([sabor, ps]) => `
-      <div class="item ${ps.some((p) => qtd[p.id]) ? "on" : ""}">
-        <h3>${esc(sabor)}</h3>
-        ${ps[0].descricao ? `<p>${esc(ps[0].descricao)}</p>` : ""}
+    const grupos = porSabor();
+    $("menu").innerHTML = grupos.map(([sabor, ps]) => `
+      <div class="sabor ${ps.some((p) => qtd[p.id]) ? "on" : ""}">
+        <svg class="azevinho esq" viewBox="0 0 30 22" aria-hidden="true"><use href="#azevinho"/></svg>
+        <svg class="azevinho" viewBox="0 0 30 22" aria-hidden="true"><use href="#azevinho"/></svg>
+        <img class="foto" src="/assets/sabores/${esc(ps[0].id.replace(/-\d+$/, ""))}.jpg" alt="" width="190" height="143" loading="lazy" onerror="this.style.visibility='hidden'">
+        <div class="info">
+          <h3>${esc(sabor)}</h3>
+          ${ps[0].descricao ? `<p>${esc(ps[0].descricao)}</p>` : ""}
+        </div>
         <div class="tamanhos">
           ${ps.map((p) => {
             const rotulo = p.tamanho || (p.peso_g ? `${p.peso_g} g` : "");
@@ -69,7 +75,8 @@
             </div>`;
           }).join("")}
         </div>
-      </div>`).join("");
+      </div>`).join("") +
+      `<p class="nota">Tudo feito com ingredientes selecionados e muito carinho! ♥</p>`;
   }
 
   $("menu").addEventListener("click", (e) => {
