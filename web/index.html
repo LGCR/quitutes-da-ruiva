@@ -32,7 +32,8 @@
   .intro p { margin: 0; color: var(--muted); font-weight: 600 }
   .pill { display: inline-flex; background: var(--azul-claro); border: 1px solid var(--azul); border-radius: 99px; padding: 3px 12px; font-size: .82rem; font-weight: 800 }
 
-  .card { background: var(--card); border: 1px solid var(--line); border-radius: var(--r); padding: 22px; width: 100%; max-width: 680px }
+  .card { --pad: 22px; background: var(--card); border: 1px solid var(--line); border-radius: var(--r); padding: var(--pad); width: 100%; max-width: 860px }
+  @media (max-width: 480px) { .card { --pad: 14px } }
   form { display: flex; flex-direction: column; gap: 24px }
   fieldset { border: 0; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 12px; min-width: 0 }
   legend { font-family: var(--font-display); font-weight: 700; font-size: 1.35rem; color: var(--coral); padding: 0; margin-bottom: 8px; display: flex; align-items: center; gap: 10px }
@@ -49,34 +50,43 @@
   .ruivice { font-family: var(--font-script); font-weight: 600; font-size: 1.55rem; line-height: 1.1; color: var(--coral); margin: 0; text-align: right; flex: 1; min-width: 12ch }
   @media (max-width: 599px) { .cardapio-topo { flex-direction: column; align-items: flex-start } .ruivice { text-align: left; min-width: 0 } }
   .menu { display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px }
-  @media (min-width: 600px) { .menu { grid-template-columns: repeat(2, minmax(0, 1fr)) } }
+  @media (min-width: 760px) { .menu { grid-template-columns: repeat(2, minmax(0, 1fr)) } }
   .sabor { position: relative; background: var(--papel); border: 2px dashed var(--rosa); border-radius: 22px; padding: 14px;
     display: grid; grid-template-columns: 96px minmax(0, 1fr); grid-template-areas: "foto info" "tam tam"; gap: 10px 12px; align-items: center }
+  @media (max-width: 480px) { .sabor { padding: 12px 10px; grid-template-columns: 84px minmax(0, 1fr) } }
   .sabor.on { border-style: solid; border-color: var(--coral); background: var(--rosa-claro) }
   .sabor .foto { grid-area: foto; width: 100%; height: auto; aspect-ratio: 4 / 3; object-fit: cover;
     -webkit-mask-image: radial-gradient(ellipse 50% 50% at center, #000 70%, transparent 100%); mask-image: radial-gradient(ellipse 50% 50% at center, #000 70%, transparent 100%) }
-  .sabor .info { grid-area: info; min-width: 0 }
+  .sabor .info { grid-area: info; min-width: 0; padding-right: 26px }
   .sabor h3 { margin: 0; font-family: var(--font-display); font-size: 1.15rem; font-weight: 700; line-height: 1.15; color: var(--coral); text-wrap: balance }
   .sabor p { margin: 4px 0 0; color: var(--muted); font-size: .88rem }
   .sabor .tamanhos { grid-area: tam }
   .sabor .azevinho { position: absolute; top: 8px; right: 10px; width: 30px; height: 22px }
   .sabor .azevinho.esq { right: auto; left: 10px; transform: scaleX(-1); display: none }
-  @media (min-width: 600px) {
+  @media (min-width: 760px) {
     .sabor { grid-template-columns: minmax(0, 1fr); grid-template-areas: "foto" "info" "tam"; justify-items: center; text-align: center; align-content: start }
     .sabor .foto { width: 170px }
+    .sabor .info { padding-right: 0 }
     .sabor .tamanhos { width: 100% }
     .sabor .azevinho.esq { display: block }
   }
   .nota { margin: 0; align-self: center; text-align: center; font-family: var(--font-script); font-weight: 600; font-size: 1.6rem; line-height: 1.15; color: var(--coral); padding: 10px 16px; text-wrap: balance }
   .tamanhos { display: flex; flex-direction: column; gap: 8px; margin-top: 6px }
-  .tam { display: grid; grid-template-columns: 4.6rem minmax(0, 1fr) auto; gap: 10px; align-items: center }
-  .tam .peso { justify-self: start; background: var(--azul-forte); color: var(--sobre-azul); font-weight: 800; font-size: .85rem; padding: 3px 12px; border-radius: 99px; font-variant-numeric: tabular-nums }
-  .tam .preco { font-weight: 800; color: var(--fg); font-variant-numeric: tabular-nums }
-  .tam .min { grid-column: 1 / -1; color: var(--muted); font-weight: 700; margin-top: -4px }
-  .step { display: flex; align-items: center; background: var(--card); border: 2px solid var(--rosa); border-radius: 99px; overflow: hidden }
+  /* se peso + preço + botões não couberem na linha, os botões descem em vez de cobrir o preço */
+  .tam { display: flex; flex-wrap: wrap; gap: 8px 10px; align-items: center }
+  .tam .peso { flex: none; min-width: 4.4rem; text-align: center; background: var(--azul-forte); color: var(--sobre-azul); font-weight: 800; font-size: .85rem; padding: 3px 12px; border-radius: 99px; font-variant-numeric: tabular-nums }
+  .tam .preco { flex: 1 0 auto; white-space: nowrap; font-weight: 800; color: var(--fg); font-variant-numeric: tabular-nums }
+  .tam .min { flex-basis: 100%; color: var(--muted); font-weight: 700; margin-top: -4px }
+  .step { flex: none; margin-left: auto; display: flex; align-items: center; background: var(--card); border: 2px solid var(--rosa); border-radius: 99px; overflow: hidden }
   .step button { appearance: none; border: 0; background: none; cursor: pointer; width: 40px; height: 40px; font-size: 1.3rem; font-weight: 800; color: var(--coral) }
   .step button:hover { background: var(--rosa-claro) }
   .step output { min-width: 28px; text-align: center; font-weight: 800; font-variant-numeric: tabular-nums }
+  @media (max-width: 480px) {
+    .tam { column-gap: 8px }
+    .tam .peso { min-width: 3.6rem; padding-inline: 8px }
+    .step button { width: 34px; height: 36px }
+    .step output { min-width: 22px }
+  }
   .carregando { padding: 20px; text-align: center; color: var(--muted) }
 
   .seg { display: grid; grid-template-columns: 1fr 1fr; gap: 10px }
@@ -90,7 +100,7 @@
   .check { display: flex; gap: 10px; align-items: flex-start; font-size: .92rem; font-weight: 600 }
   .check input { width: 20px; height: 20px; accent-color: var(--coral); margin-top: 2px; flex: none }
 
-  .total { position: sticky; bottom: 0; margin: 0 -22px -22px; padding: 14px 22px calc(14px + env(safe-area-inset-bottom, 0px)); background: var(--card); border-top: 2px solid var(--line); border-radius: 0 0 var(--r) var(--r); display: flex; gap: 14px; align-items: center; justify-content: space-between; flex-wrap: wrap }
+  .total { position: sticky; bottom: 0; margin: 0 calc(-1 * var(--pad)) calc(-1 * var(--pad)); padding: 14px var(--pad) calc(14px + env(safe-area-inset-bottom, 0px)); background: var(--card); border-top: 2px solid var(--line); border-radius: 0 0 var(--r) var(--r); display: flex; gap: 14px; align-items: center; justify-content: space-between; flex-wrap: wrap }
   .total .v { font-family: var(--font-display); font-weight: 800; font-size: 1.7rem; color: var(--coral); font-variant-numeric: tabular-nums; line-height: 1 }
   .total .l { font-size: .78rem; color: var(--muted); font-weight: 800; letter-spacing: .06em; text-transform: uppercase }
   .aviso { background: var(--azul-claro); border: 2px solid var(--azul); border-radius: 14px; padding: 12px 14px; font-weight: 600 }
@@ -141,7 +151,6 @@
       <h2 class="titulo">Pré-venda de Panetones</h2>
       <p>Faça sua encomenda e receba a confirmação no WhatsApp.</p>
       <span class="pill" id="prazo">Natal 2026</span>
-      <a class="btn sec" href="/assets/cardapio.jpg" target="_blank" rel="noopener">Ver o cardápio</a>
     </div>
 
     <section class="card" id="card-form">
