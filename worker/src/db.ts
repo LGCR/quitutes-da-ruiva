@@ -1,6 +1,5 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
-import type { Portas } from "./flow";
-import type { Conversa, DataEntrega, Pedido, Produto } from "./types";
+import type { DataEntrega, Pedido, Produto } from "./types";
 
 export type Db = SupabaseClient;
 
@@ -74,27 +73,10 @@ export async function marcarWhatsapp(db: Db, id: string, status: "enviado" | "fa
   ok(await db.from("orders").update({ whatsapp_status: status, whatsapp_erro: erro }).eq("id", id));
 }
 
-export function portasDb(db: Db): Omit<Portas, "enviar" | "agora" | "config"> {
-  return {
-    async buscarConversa({ telefoneChave, pollId }) {
-      let q = db.from("conversations").select("*");
-      if (pollId) q = q.eq("poll_message_id", pollId);
-      else if (telefoneChave) q = q.eq("telefone_chave", telefoneChave);
-      else return null;
-      return (ok(await q.limit(1).maybeSingle()) as Conversa | null) ?? null;
-    },
-    async salvarConversa(c) {
-      ok(await db.from("conversations").upsert({ ...c, updated_at: new Date().toISOString() }));
-    },
-    buscarPedido: (id) => buscarPedido(db, id),
-    async atualizarPedido(id, patch) {
-      ok(await db.from("orders").update(patch).eq("id", id));
-    },
-    async marcarProcessado(id) {
-      const r = await db.from("processed_messages").insert({ id });
-      if (!r.error) return true;
-      if (r.error.code === "23505") return false;
-      throw new Error(r.error.message);
-    },
-  };
+export async function lerConfigWhatsapp(db: Db): Promise<{ instance_id: string | null; instance_name: string | null } | null> {
+  return ok(await db.from("whatsapp_config").select("instance_id, instance_name").maybeSingle());
+}
+
+export async function salvarConfigWhatsapp(db: Db, cfg: { instance_id: string | null; instance_name: string | null }) {
+  ok(await db.from("whatsapp_config").upsert({ id: true, ...cfg, updated_at: new Date().toISOString() }));
 }

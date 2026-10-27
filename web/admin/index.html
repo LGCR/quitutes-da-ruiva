@@ -55,6 +55,11 @@
   .painel h3 { margin: 0; font-family: var(--font-display); color: var(--coral); font-size: 1.15rem }
   .painel p.dica { margin: 0; color: var(--muted); font-size: .86rem }
   .linha { display: grid; gap: 8px; align-items: center }
+  .wa { max-width: 560px }
+  .wa .estado { display: flex; gap: 10px; align-items: center; flex-wrap: wrap }
+  .wa .acoes { display: flex; gap: 8px; flex-wrap: wrap }
+  .wa .qr { display: flex; flex-direction: column; align-items: center; gap: 8px; text-align: center }
+  .wa .qr img { width: min(280px, 100%); aspect-ratio: 1; background: #fff; padding: 10px; border-radius: 12px; border: 1px solid var(--line) }
   .toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(18px + env(safe-area-inset-bottom, 0px)); background: var(--fg); color: var(--bg); padding: 10px 18px; border-radius: 99px; font-weight: 800; z-index: 20 }
   .toast.erro { background: var(--erro); color: #fff }
 
@@ -87,6 +92,7 @@
       <button role="tab" data-aba="compras" aria-selected="false">Lista de compras</button>
       <button role="tab" data-aba="cardapio" aria-selected="false">Cardápio e receitas</button>
       <button role="tab" data-aba="datas" aria-selected="false">Datas de entrega</button>
+      <button role="tab" data-aba="whatsapp" aria-selected="false">WhatsApp</button>
     </nav>
 
     <section class="aba" id="aba-pedidos">
@@ -117,7 +123,7 @@
         <label class="check" for="c-pend" style="display:flex;gap:8px;align-items:center;font-weight:700"><input type="checkbox" id="c-pend" style="width:18px;height:18px;accent-color:var(--coral)"> Incluir pedidos pendentes</label>
         <button class="btn sec" type="button" id="csv-compras">Exportar CSV</button>
       </div>
-      <p class="dica" style="margin:0;color:var(--muted)">Soma da receita de cada sabor × panetones pedidos. Por padrão conta só os confirmados no WhatsApp.</p>
+      <p class="dica" style="margin:0;color:var(--muted)">Soma da receita de cada sabor × panetones pedidos. Por padrão conta só os pedidos confirmados.</p>
       <div class="tabela"><table>
         <thead><tr><th>Ingrediente</th><th class="num">Quantidade</th><th class="num">Embalagens</th><th>Embalagem</th></tr></thead>
         <tbody id="t-compras"></tbody>
@@ -168,6 +174,25 @@
           <thead><tr><th>Código</th><th>Texto no formulário</th><th class="num">Ordem</th><th>Ativa</th><th></th></tr></thead>
           <tbody id="t-datas"></tbody>
         </table></div>
+      </div>
+    </section>
+
+    <section class="aba" id="aba-whatsapp" hidden>
+      <div class="painel wa">
+        <h3>Conexão do WhatsApp</h3>
+        <p class="dica">É deste número que saem o cardápio e o resumo para o cliente, os avisos de status e o aviso de pedido novo para a Ruiva. As respostas dos clientes chegam direto no WhatsApp do número conectado.</p>
+        <div class="estado"><span class="chip" id="wa-chip">Carregando…</span><span id="wa-info"></span></div>
+        <div class="qr" id="wa-qr" hidden>
+          <img id="wa-qr-img" alt="QR Code para conectar o WhatsApp">
+          <small id="wa-qr-dica">No celular: WhatsApp → Aparelhos conectados → Conectar um aparelho.</small>
+        </div>
+        <div class="acoes">
+          <button class="btn" type="button" id="wa-criar" hidden>Criar conexão</button>
+          <button class="btn" type="button" id="wa-conectar" hidden>Conectar</button>
+          <button class="btn sec" type="button" id="wa-teste" hidden>Enviar teste para a Ruiva</button>
+          <button class="btn sec" type="button" id="wa-desconectar" hidden>Desconectar</button>
+          <button class="btn sec" type="button" id="wa-sair" hidden>Sair do aparelho</button>
+        </div>
       </div>
     </section>
   </div>
@@ -240,6 +265,7 @@
     document.querySelectorAll("section.aba").forEach((s) => (s.hidden = s.id !== `aba-${nome}`));
     if (nome === "compras") carregarCompras();
     if (nome === "cardapio" || nome === "datas") carregarCatalogo();
+    if (nome === "whatsapp") carregarWhatsapp(); else pararPollWa();
   }
 
   async function carregarTudo() {
@@ -265,7 +291,7 @@
     const un = (ps) => ps.reduce((s, p) => s + p.itens.reduce((a, i) => a + i.qtd, 0), 0);
     $("kpis").innerHTML = [
       ["Confirmados", conf.length],
-      ["Aguardando no WhatsApp", pend.length],
+      ["Aguardando confirmação", pend.length],
       ["Panetones confirmados", un(conf)],
       ["Faturamento confirmado", brl(conf.reduce((s, p) => s + p.total_centavos, 0))],
     ].map(([l, v]) => `<div class="kpi"><div class="l">${l}</div><div class="v">${v}</div></div>`).join("");
@@ -292,11 +318,13 @@
     if (!sel) return;
     const id = sel.closest("tr").dataset.id;
     try {
-      await salvar(`/pedidos/${id}`, { [sel.dataset.campo]: sel.value || null }, "PATCH");
+      const r = await salvar(`/pedidos/${id}`, { [sel.dataset.campo]: sel.value || null }, "PATCH");
       const p = pedidos.find((x) => x.id === id);
       p[sel.dataset.campo] = sel.value || null;
       renderPedidos();
-      toast("Pedido atualizado");
+      if (r.aviso === "enviado") toast("Pedido atualizado · cliente avisado no WhatsApp");
+      else if (r.aviso === "falhou") toast("Pedido atualizado, mas o aviso no WhatsApp falhou: " + (r.erro || ""), true);
+      else toast("Pedido atualizado");
     } catch (err) { toast(err.message, true); }
   });
 
@@ -501,6 +529,63 @@
       toast("Data salva");
       carregarCatalogo();
     } catch (err) { toast(err.message, true); }
+  });
+
+  // WhatsApp ----------------------------------------------------------------
+  const WA_STATUS = {
+    CONNECTED: ["Conectado", "confirmado"], WAITING_QRCODE: ["Aguardando QR Code", "pendente"],
+    CONNECTING: ["Conectando…", "pendente"], INITIALIZING: ["Iniciando…", "pendente"], RECONNECTING: ["Reconectando…", "pendente"],
+    CREATED: ["Desconectado", "substituido"], DISCONNECTED: ["Desconectado", "substituido"], LOGGED_OUT: ["Desconectado", "substituido"],
+    FAILED: ["Falhou", "falhou"],
+  };
+  let pollWa = null;
+
+  function pararPollWa() { clearTimeout(pollWa); pollWa = null; }
+
+  async function carregarWhatsapp() {
+    pararPollWa();
+    try { renderWhatsapp(await api("/whatsapp")); }
+    catch (e) { renderWhatsapp(null); toast(e.message, true); }
+  }
+
+  function renderWhatsapp(w) {
+    const inst = w?.instancia, st = inst?.status;
+    const [rotulo, classe] = !w ? ["Sem resposta", "falhou"] : !w.instance_id || w.perdida ? ["Não configurado", "sem_optin"] : WA_STATUS[st] || [st, "substituido"];
+    $("wa-chip").textContent = rotulo;
+    $("wa-chip").className = "chip " + classe;
+    $("wa-info").textContent = st === "CONNECTED" ? [inst.displayName, inst.phone].filter(Boolean).join(" · ") : w?.perdida ? "A conexão anterior não existe mais. Crie outra." : "";
+    const conectado = st === "CONNECTED", existe = !!w && !!w.instance_id && !w.perdida;
+    $("wa-criar").hidden = !w || existe;
+    $("wa-conectar").hidden = !existe || conectado;
+    $("wa-conectar").textContent = $("wa-qr").hidden ? "Conectar" : "Gerar novo QR Code";
+    $("wa-teste").hidden = !conectado;
+    $("wa-desconectar").hidden = !existe || !conectado;
+    $("wa-sair").hidden = !existe || !conectado;
+    if (conectado && !$("wa-qr").hidden) { $("wa-qr").hidden = true; toast("WhatsApp conectado"); }
+    // Enquanto o QR estiver na tela, confere a cada 3 s se a leitura já foi feita.
+    if (!$("wa-qr").hidden && !$("aba-whatsapp").hidden) pollWa = setTimeout(carregarWhatsapp, 3000);
+  }
+
+  async function acaoWa(botao, path, ok) {
+    botao.disabled = true;
+    try { const r = await api(path, { method: "POST" }); if (ok) ok(r); await carregarWhatsapp(); }
+    catch (e) { toast(e.message, true); }
+    finally { botao.disabled = false; }
+  }
+
+  $("wa-criar").addEventListener("click", (e) => acaoWa(e.target, "/whatsapp/instancia", () => toast("Conexão criada. Agora toque em Conectar.")));
+  $("wa-conectar").addEventListener("click", (e) => acaoWa(e.target, "/whatsapp/conectar", (r) => {
+    if (!r.qrCodeImage) return toast(r.status === "CONNECTED" ? "Já está conectado" : "O QR Code ainda não ficou pronto. Tente de novo.");
+    $("wa-qr-img").src = r.qrCodeImage;
+    const validade = r.qrCodeExpiresAt ? ` Vale até ${new Date(r.qrCodeExpiresAt).toLocaleTimeString("pt-BR", { timeStyle: "short" })}.` : "";
+    $("wa-qr-dica").textContent = "No celular: WhatsApp → Aparelhos conectados → Conectar um aparelho." + validade;
+    $("wa-qr").hidden = false;
+  }));
+  $("wa-teste").addEventListener("click", (e) => acaoWa(e.target, "/whatsapp/teste", (r) => toast(`Teste enviado para ${r.para}`)));
+  $("wa-desconectar").addEventListener("click", (e) => acaoWa(e.target, "/whatsapp/desconectar", () => toast("WhatsApp desconectado")));
+  $("wa-sair").addEventListener("click", (e) => {
+    if (!confirm("Sair do aparelho apaga a sessão. Para voltar vai ser preciso ler o QR Code de novo. Continuar?")) return;
+    acaoWa(e.target, "/whatsapp/sair", () => toast("Sessão encerrada"));
   });
 })();
 </script>

@@ -184,7 +184,7 @@
       }
       $("ok-codigo").textContent = `Pedido #${j.codigo}`;
       $("ok-texto").textContent = j.whatsapp
-        ? `${$("nome").value.trim().split(/\s+/)[0]}, em instantes chega no seu WhatsApp (${$("telefone").value}) o cardápio e o resumo do pedido. Confirme por lá tocando na enquete.`
+        ? `${$("nome").value.trim().split(/\s+/)[0]}, em instantes chega no seu WhatsApp (${$("telefone").value}) o cardápio e o resumo do pedido. Responda por lá para confirmar e combinar o pagamento.`
         : "Recebemos seu pedido. A Ruiva vai entrar em contato para confirmar.";
       $("card-form").hidden = true;
       $("card-ok").hidden = false;

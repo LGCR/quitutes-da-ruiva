@@ -1,33 +1,32 @@
 # Quitutes da Ruiva: pré-venda de panetones
 
-O cliente preenche o formulário e recebe no WhatsApp o cardápio, o resumo do pedido e uma **enquete** para confirmar. Depois vem outra enquete para escolher o pagamento. A Ruiva acompanha tudo no painel `/admin`, onde também fica a **lista de compras de ingredientes**: a receita de cada sabor multiplicada pelos panetones confirmados.
+O cliente preenche o formulário e recebe no WhatsApp o cardápio e o resumo do pedido. A confirmação e o pagamento são combinados com a Ruiva na própria conversa. A Ruiva acompanha tudo no painel `/admin`, onde também fica a **lista de compras de ingredientes**: a receita de cada sabor multiplicada pelos panetones confirmados.
 
 ```
 Formulário (Cloudflare Pages) ──POST /api/pedidos──► Worker ──► Supabase (pedido "pendente")
-                                                       └──► Evolution API: cardápio + resumo + enquete
-WhatsApp do cliente ──voto / "1,2,3"──► Evolution ──webhook──► Worker ──► confirma, pede pagamento, manda Pix
-Painel /admin (Pages + login Supabase) ──► Worker /api/admin/* ──► pedidos, lista de compras, cardápio
+                                                       └──► whatsapp-backend: cardápio + resumo (cliente), aviso (Ruiva)
+Painel /admin (Pages + login Supabase) ──► Worker /api/admin/* ──► pedidos, lista de compras, cardápio, conexão do WhatsApp
 ```
 
 ## Fluxo no WhatsApp
 
+As mensagens saem pelo [whatsapp-backend](../whatsapp-backend) (o mesmo do calculacivil). O número é conectado por QR Code na aba **WhatsApp** do painel.
+
 1. Cardápio (imagem ou texto) com a saudação "Oi, {nome}! Aqui é a Ruiva 🎀"
-2. Resumo do pedido com o total
-3. Enquete **"Está tudo certo com o seu pedido?"**
-   - ✅ Confirmar pedido → enquete de pagamento: Pix (50% de sinal), dinheiro ou cartão na entrega → pedido **confirmado**. O cliente recebe a chave Pix e a Ruiva recebe um aviso.
-   - ✏️ Quero alterar → link do formulário já preenchido. Ao reenviar, o pedido antigo vira "substituído".
-   - 💬 Falar com a Ruiva → o bot para de responder esse cliente e avisa a Ruiva. Se o cliente mandar `menu`, o bot volta.
+2. Resumo do pedido com o total, o link para alterar (formulário já preenchido; o pedido antigo vira "substituído") e o pedido para responder a mensagem para confirmar.
+3. A Ruiva recebe no `RUIVA_PHONE` um aviso de cada pedido novo ou alterado.
+4. Quando a Ruiva muda o status no painel, o cliente recebe um aviso:
+   - **Confirmado**: com a chave Pix e o valor do sinal (50%), se o pagamento marcado for Pix.
+   - **Entregue** e **Cancelado**: mensagem curta.
 
-**Por que enquete e não botões:** numa Evolution conectada por QR Code (Baileys), botões e listas do WhatsApp não funcionam de forma confiável, mas enquete funciona. O cliente também pode responder com o número (1, 2, 3). Se ele mandar uma mensagem que o bot não entende, recebe uma ajuda curta, no máximo uma vez a cada 2 minutos.
-
-O bot **só responde números que fizeram pedido pelo formulário**. As outras conversas do WhatsApp da Ruiva continuam normais.
+Não há bot por enquanto: o whatsapp-backend ainda não tem enquete nem repassa as mensagens recebidas. O bot antigo (enquetes pela Evolution) está no histórico do Git, e as tabelas `conversations` e `processed_messages` continuam no banco para quando ele voltar.
 
 ## Pastas
 
 | Pasta | O que tem |
 |---|---|
 | `web/` | Site estático: formulário (`index.html`), painel (`admin/`), `config.js` |
-| `worker/` | API em Cloudflare Workers (Hono): pedidos, webhook da Evolution, admin |
+| `worker/` | API em Cloudflare Workers (Hono): pedidos, envio pelo whatsapp-backend, admin |
 | `supabase/` | Migração do banco (tabelas, relatórios, função `criar_pedido`) e `seed.sql` com dados de exemplo |
 
 ## Passo a passo do deploy
@@ -56,17 +55,17 @@ npm install
 npx wrangler login
 npx wrangler secret put SUPABASE_URL          # https://xxxx.supabase.co
 npx wrangler secret put SUPABASE_SECRET_KEY   # sb_secret_...
-npx wrangler secret put EVOLUTION_URL         # https://evolution.seudominio.com.br
-npx wrangler secret put EVOLUTION_KEY         # apikey global ou da instância
-npx wrangler secret put WEBHOOK_TOKEN         # gere com: openssl rand -hex 24
+npx wrangler secret put WHATSAPP_BACKEND_URL  # https://wa.seudominio.com.br
+npx wrangler secret put WHATSAPP_API_KEY      # API key do tenant: messages:send, instances:read, instances:manage
 npx wrangler secret put ADMIN_EMAILS          # ruiva@exemplo.com (separe vários com vírgula)
 npx wrangler secret put PIX_KEY               # chave Pix enviada ao cliente
 npx wrangler secret put RUIVA_PHONE           # 55DDDNÚMERO para receber avisos (opcional)
-npx wrangler deploy
+npm run deploy
 ```
 
+`npm run deploy` reenvia, a cada deploy, as chaves do Supabase e o `ADMIN_EMAILS` guardados em `worker/.secrets.prod.json` (fora do Git, no formato `{"NOME": "valor"}`), e mantém as variáveis criadas no painel da Cloudflare (`--keep-vars`).
+
 No `wrangler.toml`, ajuste:
-- `EVOLUTION_INSTANCE`: o nome da instância na Evolution.
 - `SITE_URL`: o endereço público do formulário. É usado no link "Quero alterar".
 - `CARDAPIO_IMAGE_URL`: a arte do cardápio publicada pelo Pages (`<SITE_URL>/assets/cardapio.jpg`). Ela vai como foto no WhatsApp. Se ficar vazia, o cardápio vai como texto gerado a partir dos sabores ativos.
 - `routes`: coloque o Worker em `seu-dominio/api/*` para o site e a API ficarem no mesmo domínio.
@@ -84,17 +83,12 @@ npx wrangler pages deploy web --project-name quitutes-da-ruiva
 
 Depois, em Pages → Custom domains, aponte para o mesmo domínio da rota do Worker.
 
-### 4. Webhook da Evolution
+### 4. Conectar o WhatsApp
 
-Aponte o webhook da instância para o Worker, com os eventos de mensagem:
-
-```bash
-curl -X POST "$EVOLUTION_URL/webhook/set/quitutes" \
-  -H "apikey: $EVOLUTION_KEY" -H "Content-Type: application/json" \
-  -d '{"webhook":{"enabled":true,"url":"https://SEU-DOMINIO/api/webhook/evolution/SEU_WEBHOOK_TOKEN","byEvents":false,"base64":false,"events":["MESSAGES_UPSERT","MESSAGES_UPDATE"]}}'
-```
-
-Também dá para configurar no Evolution Manager → instância → Webhook.
+1. No whatsapp-backend, crie uma API key para o tenant com os escopos `messages:send`, `instances:read` e `instances:manage`, e guarde em `WHATSAPP_API_KEY`.
+2. Aplique a migration `supabase/migrations/20261027000000_whatsapp_backend.sql` (tabela `whatsapp_config`, onde fica o id da instância).
+3. No painel, abra a aba **WhatsApp** → **Criar conexão** → **Conectar** e leia o QR Code no celular (WhatsApp → Aparelhos conectados). O status muda para "Conectado" sozinho.
+4. Toque em **Enviar teste para a Ruiva** para confirmar que a mensagem chega no `RUIVA_PHONE`.
 
 ### 5. Turnstile (anti-spam, opcional)
 
@@ -103,38 +97,32 @@ Crie um widget em Cloudflare → Turnstile. Coloque a site key em `turnstileSite
 ## Painel `/admin`
 
 - **Pedidos:**
-  - números do dia (confirmados, aguardando no WhatsApp, panetones, faturamento)
+  - números do dia (confirmados, aguardando confirmação, panetones, faturamento)
   - filtros por status, data e busca
-  - troca de status e de pagamento
+  - troca de status e de pagamento (confirmado, entregue e cancelado avisam o cliente no WhatsApp)
   - "Reenviar" o WhatsApp quando o envio falhou
   - exportação CSV
 - **Lista de compras:** ingredientes somados dos pedidos confirmados, com a opção de incluir os pendentes. Mostra quantas embalagens comprar e a contagem de panetones por sabor. Exporta CSV.
 - **Cardápio e receitas:** sabores, preços, peso, quantidade mínima e ativo/inativo. Tem também a receita **por unidade** de cada sabor e o cadastro de ingredientes com o tamanho da embalagem.
 - **Datas de entrega:** as opções que aparecem no formulário. Desative quando a data lotar.
+- **WhatsApp:** status da conexão, QR Code para conectar, desconectar/sair do aparelho e mensagem de teste.
 
 ## Rodar localmente
 
 ```bash
 cd worker
-cp .dev.vars.example .dev.vars   # EVOLUTION_MOCK=1 só registra as mensagens no log, sem enviar
+cp .dev.vars.example .dev.vars   # WHATSAPP_MOCK=1 só registra as mensagens no log, sem enviar
 npm install
-npm test                         # testes do fluxo do WhatsApp e da leitura do webhook
+npm test                         # testes do cliente do whatsapp-backend e das mensagens
 npx wrangler dev                 # API em http://127.0.0.1:8787
 ```
 
 Sirva a pasta `web/` (ex.: `npx serve web -l 5173`) com `apiBase: "http://127.0.0.1:8787"` no `config.js`.
-
-Para simular um voto pelo webhook:
-
-```bash
-curl -X POST http://127.0.0.1:8787/api/webhook/evolution/SEU_TOKEN -H 'Content-Type: application/json' \
-  -d '{"event":"messages.upsert","instance":"quitutes","data":{"key":{"remoteJid":"5511987654321@s.whatsapp.net","fromMe":false,"id":"T1"},"message":{"conversation":"1"}}}'
-```
 
 ## Cuidados
 
 - Mensagens só vão para quem marcou a autorização no formulário. Isso reduz o risco de bloqueio do número conectado por QR Code.
 - Os preços são recalculados no banco (`criar_pedido`). O valor que vem do navegador é ignorado.
 - Todas as tabelas têm RLS ligado e nenhuma policy: com a chave pública (anon), ninguém lê nem grava nada. Só o Worker, com a service role, acessa o banco.
-- O mesmo evento do webhook nunca é processado duas vezes (tabela `processed_messages`). Votos em enquetes antigas são ignorados.
+- A API key do whatsapp-backend fica só no Worker. O navegador fala com o Worker, que repassa para o whatsapp-backend.
 - Números com e sem o nono dígito são reconhecidos como o mesmo cliente.

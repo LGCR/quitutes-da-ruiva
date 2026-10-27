@@ -3,11 +3,10 @@ export interface Env {
   /** secret key (sb_secret_...) ou a service_role key antiga */
   SUPABASE_SECRET_KEY?: string;
   SUPABASE_SERVICE_KEY?: string;
-  EVOLUTION_URL: string;
-  EVOLUTION_KEY: string;
-  EVOLUTION_INSTANCE: string;
-  EVOLUTION_MOCK?: string;
-  WEBHOOK_TOKEN: string;
+  WHATSAPP_BACKEND_URL: string;
+  WHATSAPP_API_KEY: string;
+  /** "1" = não chama o whatsapp-backend, só registra no log */
+  WHATSAPP_MOCK?: string;
   ADMIN_EMAILS: string;
   PIX_KEY?: string;
   RUIVA_PHONE?: string;
@@ -17,7 +16,6 @@ export interface Env {
   CARDAPIO_IMAGE_URL?: string;
 }
 
-export type Step = "aguardando_confirmacao" | "aguardando_pagamento" | "alterando" | "confirmado" | "humano";
 export type StatusPedido = "pendente" | "confirmado" | "substituido" | "cancelado" | "entregue";
 export type Pagamento = "pix" | "dinheiro" | "cartao";
 
@@ -63,15 +61,7 @@ export interface Pedido {
   status: StatusPedido;
   total_centavos: number;
   edit_token: string;
+  optin_whatsapp: boolean;
+  substitui_id: string | null;
   itens: ItemPedido[];
-}
-
-export interface Conversa {
-  telefone_chave: string;
-  jid: string;
-  order_id: string;
-  step: Step;
-  poll_message_id: string | null;
-  poll_options: string[];
-  ultimo_help_em: string | null;
 }

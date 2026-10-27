@@ -2,6 +2,8 @@ name = "quitutes-da-ruiva-api"
 main = "src/index.ts"
 compatibility_date = "2026-10-01"
 compatibility_flags = ["nodejs_compat"]
+# Não apaga as variáveis criadas no painel da Cloudflare a cada deploy
+keep_vars = true
 
 # Coloque a API no mesmo domínio do site (Cloudflare Pages) para não precisar de CORS:
 # routes = [{ pattern = "encomendas.quitutesdaruiva.com.br/api/*", zone_name = "quitutesdaruiva.com.br" }]
@@ -10,16 +12,15 @@ compatibility_flags = ["nodejs_compat"]
 SITE_URL = "https://quitutes-da-ruiva.lucas-giovannicr.workers.dev"
 # Origens extras permitidas (separadas por vírgula), ex.: o domínio *.pages.dev durante os testes
 ALLOWED_ORIGINS = "http://localhost:5173,http://127.0.0.1:5173"
-EVOLUTION_INSTANCE = "quitutes"
 # URL pública da imagem do cardápio (web/assets/cardapio.jpg publicada no Pages). Vazio = cardápio em texto.
 CARDAPIO_IMAGE_URL = "https://quitutes-da-ruiva.lucas-giovannicr.workers.dev/assets/cardapio.jpg"
-# "1" = não chama a Evolution, só registra no log (bom para testar)
-EVOLUTION_MOCK = "0"
+# "1" = não chama o whatsapp-backend, só registra no log (bom para testar)
+WHATSAPP_MOCK = "0"
 
-# Secrets (configure com `npx wrangler secret put NOME`):
+# Secrets (configure com `npx wrangler secret put NOME` ou em .secrets.prod.json):
 #   SUPABASE_URL, SUPABASE_SECRET_KEY (sb_secret_...; a service_role antiga também funciona em SUPABASE_SERVICE_KEY)
-#   EVOLUTION_URL, EVOLUTION_KEY
-#   WEBHOOK_TOKEN        token aleatório que vai na URL do webhook
+#   WHATSAPP_BACKEND_URL endereço do whatsapp-backend (ex.: https://wa.seudominio.com.br)
+#   WHATSAPP_API_KEY     API key do tenant com os escopos messages:send, instances:read e instances:manage
 #   ADMIN_EMAILS         e-mails que podem entrar no painel, separados por vírgula
 #   PIX_KEY              chave Pix enviada ao cliente
 #   RUIVA_PHONE          WhatsApp da Ruiva para avisos (55DDDNÚMERO), opcional

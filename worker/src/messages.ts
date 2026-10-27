@@ -5,18 +5,6 @@ export const brl = (centavos: number) =>
 
 export const primeiroNome = (nome: string) => nome.trim().split(/\s+/)[0] || nome;
 
-export const ENQUETE_CONFIRMAR = {
-  pergunta: "Está tudo certo com o seu pedido?",
-  opcoes: ["✅ Confirmar pedido", "✏️ Quero alterar", "💬 Falar com a Ruiva"],
-};
-
-export const ENQUETE_PAGAMENTO = {
-  pergunta: "Como você prefere pagar?",
-  opcoes: ["Pix (50% agora, resto na entrega)", "Dinheiro na entrega", "Cartão na entrega"],
-};
-
-export const PAGAMENTOS = ["pix", "dinheiro", "cartao"] as const;
-
 export function legendaCardapio(nome: string) {
   return `Oi, ${primeiroNome(nome)}! Aqui é a Ruiva 🎀\nRecebi sua encomenda de panetone. Esse é o nosso cardápio de Natal.`;
 }
@@ -35,27 +23,22 @@ export function resumoPedido(p: Pedido) {
   return `*Pedido #${p.codigo}*\n${itens}\n\n*Total: ${brl(p.total_centavos)}*\n${entrega}\n📅 ${p.data_rotulo}${obs}`;
 }
 
-export function ajudaNumerada(opcoes: string[]) {
-  return `Não entendi 🙈 Toque em uma opção da enquete acima ou responda com o número:\n${opcoes
-    .map((o, i) => `*${i + 1}* - ${o}`)
-    .join("\n")}`;
-}
+const linkAlterar = (siteUrl: string, token: string) => `${siteUrl.replace(/\/+$/, "")}/?editar=${token}`;
 
 export const msg = {
-  confirmouItens: () => "Oba! Seu panetone já está reservado 🥰",
-  linkAlterar: (siteUrl: string, token: string) =>
-    `Sem problema! Ajuste seu pedido por este link e eu te mando o resumo de novo:\n${siteUrl.replace(/\/+$/, "")}/?editar=${token}`,
-  chamouRuiva: () => "Chamei a Ruiva! Ela responde por aqui rapidinho. Pode ir escrevendo sua dúvida 💬",
-  pix: (total: number, chave: string) =>
-    `Perfeito! Faça o Pix de *${brl(Math.round(total / 2))}* (50% do pedido) para a chave:\n*${chave}*\n\nDepois é só mandar o comprovante aqui 📎`,
-  pagamentoNaEntrega: (tipo: "dinheiro" | "cartao") =>
-    `Combinado, pagamento ${tipo === "dinheiro" ? "em dinheiro" : "no cartão"} na entrega.`,
-  confirmado: (p: Pedido) =>
-    `🎀 *Pedido #${p.codigo} confirmado!*\nPerto da data (${p.data_rotulo}) eu te lembro por aqui. Obrigada por escolher a Quitutes da Ruiva!`,
-  avisoRuivaHumano: (p: Pedido) =>
-    `🔔 ${p.nome} (${p.telefone}) pediu para falar com você sobre o pedido #${p.codigo}. O bot parou de responder essa conversa. Para religar, peça para a pessoa mandar "menu".`,
-  avisoRuivaConfirmado: (p: Pedido) =>
-    `✅ Novo pedido confirmado #${p.codigo}: ${p.nome}, ${brl(p.total_centavos)} (${p.itens.map((i) => `${i.qtd}x ${i.nome}`).join(", ")}).`,
-  statusAtual: (p: Pedido) =>
-    `${resumoPedido(p)}\n\nStatus: *${p.status === "confirmado" ? "confirmado" : p.status === "pendente" ? "aguardando confirmação" : p.status}*`,
+  pedidoRecebido: (p: Pedido, siteUrl: string) =>
+    `${resumoPedido(p)}\n\nPara confirmar e combinar o pagamento, é só responder esta mensagem 💬\nSe quiser mudar algo, ajuste por aqui:\n${linkAlterar(siteUrl, p.edit_token)}`,
+  statusConfirmado: (p: Pedido, pixKey?: string) => {
+    const pix = p.pagamento === "pix" && pixKey
+      ? `\n\nO Pix de *${brl(Math.round(p.total_centavos / 2))}* (50% do pedido) vai para a chave:\n*${pixKey}*\nDepois é só mandar o comprovante aqui 📎`
+      : "";
+    return `🎀 *Pedido #${p.codigo} confirmado!*\nTe vejo em ${p.data_rotulo}. Obrigada por escolher a Quitutes da Ruiva!${pix}`;
+  },
+  statusEntregue: (p: Pedido) =>
+    `🎄 Pedido #${p.codigo} entregue! Obrigada, ${primeiroNome(p.nome)}. Bom apetite e feliz Natal! 🎀`,
+  statusCancelado: (p: Pedido) =>
+    `O pedido #${p.codigo} foi cancelado. Se foi engano ou quiser fazer outro, é só responder aqui 💬`,
+  avisoRuivaNovo: (p: Pedido) =>
+    `${p.substitui_id ? "✏️ Pedido alterado pelo cliente" : "🔔 Novo pedido"} #${p.codigo}: ${p.nome} (${p.telefone}), ${brl(p.total_centavos)} — ${p.itens.map((i) => `${i.qtd}x ${i.nome}`).join(", ")}. ${p.tipo_entrega === "entrega" ? "Entrega" : "Retirada"} em ${p.data_rotulo}.`,
+  teste: () => "Teste do painel da Quitutes da Ruiva ✅ O WhatsApp está conectado.",
 };

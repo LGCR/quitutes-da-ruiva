@@ -1,9 +1,8 @@
 SUPABASE_URL=http://127.0.0.1:54321
 SUPABASE_SECRET_KEY=coloque-a-secret-key
-EVOLUTION_URL=https://evolution.seudominio.com.br
-EVOLUTION_KEY=sua-apikey
-WEBHOOK_TOKEN=troque-por-um-token-aleatorio
+WHATSAPP_BACKEND_URL=http://localhost:3000
+WHATSAPP_API_KEY=sua-api-key-do-whatsapp-backend
 ADMIN_EMAILS=ruiva@exemplo.com
 PIX_KEY=pix@quitutesdaruiva.com.br
 RUIVA_PHONE=5511999999999
-EVOLUTION_MOCK=1
+WHATSAPP_MOCK=1

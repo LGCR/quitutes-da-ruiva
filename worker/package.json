@@ -4,7 +4,7 @@
   "type": "module",
   "scripts": {
     "dev": "wrangler dev",
-    "deploy": "wrangler deploy",
+    "deploy": "wrangler deploy --keep-vars --secrets-file .secrets.prod.json",
     "test": "vitest run",
     "typecheck": "tsc --noEmit"
   },

@@ -1,11 +1,10 @@
 import { Hono, type Context } from "hono";
 import { cors } from "hono/cors";
 import * as db from "./db";
-import { criarEvolution } from "./evolution";
-import { iniciarConversa, tratarEntrada, type Portas } from "./flow";
+import { cardapioTexto, legendaCardapio, msg } from "./messages";
 import { chaveTelefone, normalizarTelefone } from "./phone";
-import type { Env } from "./types";
-import { lerWebhook } from "./webhook";
+import type { Env, Pedido } from "./types";
+import { criarWhatsapp, ErroWhatsapp, instancias, type Enviador } from "./whatsapp";
 
 type App = { Bindings: Env; Variables: { db: db.Db; adminEmail: string } };
 const app = new Hono<App>();
@@ -25,36 +24,57 @@ app.use("/api/*", async (c, next) => {
 
 app.onError((err, c) => {
   console.error(err);
+  // 401/403 do whatsapp-backend é a API key do Worker, não a sessão do admin: não pode deslogar o painel.
+  if (err instanceof ErroWhatsapp) return c.json({ erro: err.message }, [400, 402, 404, 409].includes(err.status) ? (err.status as 400) : 502);
   return c.json({ erro: "Algo deu errado do nosso lado. Tente de novo em instantes." }, 500);
 });
 
-function portas(c: Context<App>): Portas {
-  const e = c.env;
-  return {
-    ...db.portasDb(c.get("db")),
-    enviar: criarEvolution({ url: e.EVOLUTION_URL, key: e.EVOLUTION_KEY, instance: e.EVOLUTION_INSTANCE, mock: e.EVOLUTION_MOCK === "1" }),
-    agora: () => new Date(),
-    config: {
-      siteUrl: e.SITE_URL,
-      pixKey: e.PIX_KEY,
-      ruivaPhone: e.RUIVA_PHONE ? normalizarTelefone(e.RUIVA_PHONE) ?? undefined : undefined,
-      cardapioImagemUrl: e.CARDAPIO_IMAGE_URL || undefined,
-    },
-  };
+const NOME_INSTANCIA = "quitutes-da-ruiva";
+
+const backend = (c: Context<App>) => ({ url: c.env.WHATSAPP_BACKEND_URL, key: c.env.WHATSAPP_API_KEY });
+
+/** Monta o envio com a instância conectada pelo painel (aba WhatsApp). */
+async function enviador(c: Context<App>): Promise<Enviador> {
+  const cfg = await db.lerConfigWhatsapp(c.get("db"));
+  return criarWhatsapp({ ...backend(c), instanceId: cfg?.instance_id ?? null, mock: c.env.WHATSAPP_MOCK === "1" });
 }
 
-/** Envia cardápio + resumo + enquete e registra se deu certo. */
+const telefoneRuiva = (c: Context<App>) => (c.env.RUIVA_PHONE ? normalizarTelefone(c.env.RUIVA_PHONE) : null);
+
+/** Envia cardápio + resumo com o link de alteração e registra se deu certo. */
 async function enviarWhatsapp(c: Context<App>, orderId: string) {
   const d = c.get("db");
   try {
-    const [pedido, { produtos }] = await Promise.all([db.buscarPedido(d, orderId), db.catalogo(d)]);
+    const [pedido, { produtos }, enviar] = await Promise.all([db.buscarPedido(d, orderId), db.catalogo(d), enviador(c)]);
     if (!pedido) return;
-    await iniciarConversa(pedido, produtos, portas(c));
+    if (c.env.CARDAPIO_IMAGE_URL) await enviar.imagem(pedido.telefone, c.env.CARDAPIO_IMAGE_URL, legendaCardapio(pedido.nome));
+    else await enviar.texto(pedido.telefone, cardapioTexto(pedido.nome, produtos));
+    await enviar.texto(pedido.telefone, msg.pedidoRecebido(pedido, c.env.SITE_URL));
     await db.marcarWhatsapp(d, orderId, "enviado");
   } catch (err) {
     console.error("whatsapp", err);
     await db.marcarWhatsapp(d, orderId, "falhou", String((err as Error).message ?? err).slice(0, 500)).catch(() => {});
   }
+}
+
+/** Avisa a Ruiva de cada pedido novo (ou alterado), mesmo sem opt-in do cliente. */
+async function avisarRuiva(c: Context<App>, orderId: string) {
+  const para = telefoneRuiva(c);
+  if (!para) return;
+  try {
+    const [pedido, enviar] = await Promise.all([db.buscarPedido(c.get("db"), orderId), enviador(c)]);
+    if (pedido) await enviar.texto(para, msg.avisoRuivaNovo(pedido));
+  } catch (err) {
+    console.error("aviso ruiva", err);
+  }
+}
+
+/** Mensagem para o cliente quando o admin muda o status, ou null se esse status não avisa. */
+function textoDoStatus(p: Pedido, pixKey?: string): string | null {
+  if (p.status === "confirmado") return msg.statusConfirmado(p, pixKey);
+  if (p.status === "entregue") return msg.statusEntregue(p);
+  if (p.status === "cancelado") return msg.statusCancelado(p);
+  return null;
 }
 
 function emSegundoPlano(c: Context<App>, p: Promise<unknown>) {
@@ -159,24 +179,9 @@ app.post("/api/pedidos", async (c) => {
 
   if (optin) await emSegundoPlano(c, enviarWhatsapp(c, criado.id));
   else await db.marcarWhatsapp(d, criado.id, "sem_optin");
+  await emSegundoPlano(c, avisarRuiva(c, criado.id));
 
   return c.json({ codigo: criado.codigo, total_centavos: criado.total_centavos, whatsapp: optin }, 201);
-});
-
-// Webhook da Evolution --------------------------------------------------------
-
-app.post("/api/webhook/evolution/:token", async (c) => {
-  if (!c.env.WEBHOOK_TOKEN || c.req.param("token") !== c.env.WEBHOOK_TOKEN) return c.text("forbidden", 403);
-  const body = await c.req.json().catch(() => null);
-  if (body?.instance && c.env.EVOLUTION_INSTANCE && body.instance !== c.env.EVOLUTION_INSTANCE) return c.text("ok");
-  const entrada = lerWebhook(body);
-  if (entrada) {
-    await emSegundoPlano(
-      c,
-      tratarEntrada(entrada, portas(c)).catch((err) => console.error("webhook", err)),
-    );
-  }
-  return c.text("ok");
 });
 
 // Admin -----------------------------------------------------------------------
@@ -207,6 +212,8 @@ const PAGTOS = ["pix", "dinheiro", "cartao"];
 
 admin.patch("/pedidos/:id", async (c) => {
   const b = await c.req.json<any>();
+  const d = c.get("db");
+  const id = c.req.param("id");
   const patch: Record<string, unknown> = {};
   if (b.status !== undefined) {
     if (!STATUS.includes(b.status)) return c.json({ erro: "Status inválido." }, 400);
@@ -217,9 +224,21 @@ admin.patch("/pedidos/:id", async (c) => {
     if (b.pagamento !== null && !PAGTOS.includes(b.pagamento)) return c.json({ erro: "Pagamento inválido." }, 400);
     patch.pagamento = b.pagamento;
   }
-  const r = await c.get("db").from("orders").update(patch).eq("id", c.req.param("id"));
+  const antes = patch.status !== undefined ? await db.buscarPedido(d, id) : null;
+  const r = await d.from("orders").update(patch).eq("id", id);
   if (r.error) throw new Error(r.error.message);
-  return c.json({ ok: true });
+
+  // Avisa o cliente quando o status muda de fato (só quem aceitou receber no WhatsApp).
+  const depois = antes ? ({ ...antes, ...patch } as Pedido) : null;
+  const texto = depois && antes!.status !== depois.status && depois.optin_whatsapp ? textoDoStatus(depois, c.env.PIX_KEY) : null;
+  if (!texto) return c.json({ ok: true, aviso: null });
+  try {
+    await (await enviador(c)).texto(depois!.telefone, texto);
+    return c.json({ ok: true, aviso: "enviado" });
+  } catch (err) {
+    console.error("aviso status", err);
+    return c.json({ ok: true, aviso: "falhou", erro: String((err as Error).message ?? err) });
+  }
 });
 
 admin.post("/pedidos/:id/reenviar", async (c) => {
@@ -228,6 +247,49 @@ admin.post("/pedidos/:id/reenviar", async (c) => {
   await enviarWhatsapp(c, c.req.param("id"));
   const p = await c.get("db").from("orders").select("whatsapp_status, whatsapp_erro").eq("id", c.req.param("id")).single();
   return c.json(p.data);
+});
+
+// WhatsApp (conexão com o whatsapp-backend) ------------------------------------
+
+/** Instância salva + status ao vivo. `perdida` = o id salvo não existe mais no whatsapp-backend. */
+async function estadoWhatsapp(c: Context<App>) {
+  const cfg = await db.lerConfigWhatsapp(c.get("db"));
+  const id = cfg?.instance_id ?? null;
+  if (!id) return { instance_id: null, instancia: null, perdida: false };
+  try {
+    const instancia = await instancias(backend(c)).ver(id);
+    return { instance_id: id, instancia, perdida: instancia.status === "DELETED" };
+  } catch (err) {
+    if (err instanceof ErroWhatsapp && err.status === 404) return { instance_id: id, instancia: null, perdida: true };
+    throw err;
+  }
+}
+
+async function instanciaSalva(c: Context<App>) {
+  const id = (await db.lerConfigWhatsapp(c.get("db")))?.instance_id;
+  if (!id) throw new ErroWhatsapp("Crie a conexão do WhatsApp primeiro.", 400);
+  return id;
+}
+
+admin.get("/whatsapp", async (c) => c.json(await estadoWhatsapp(c)));
+
+admin.post("/whatsapp/instancia", async (c) => {
+  const atual = await estadoWhatsapp(c);
+  if (atual.instancia && !atual.perdida) return c.json({ erro: "A conexão já existe. Use Conectar para gerar o QR Code." }, 409);
+  const nova = await instancias(backend(c)).criar(NOME_INSTANCIA);
+  await db.salvarConfigWhatsapp(c.get("db"), { instance_id: nova.id, instance_name: nova.name ?? NOME_INSTANCIA });
+  return c.json({ instance_id: nova.id, instancia: nova, perdida: false });
+});
+
+admin.post("/whatsapp/conectar", async (c) => c.json(await instancias(backend(c)).conectar(await instanciaSalva(c))));
+admin.post("/whatsapp/desconectar", async (c) => c.json(await instancias(backend(c)).desconectar(await instanciaSalva(c))));
+admin.post("/whatsapp/sair", async (c) => c.json(await instancias(backend(c)).sair(await instanciaSalva(c))));
+
+admin.post("/whatsapp/teste", async (c) => {
+  const para = telefoneRuiva(c);
+  if (!para) return c.json({ erro: "Configure o RUIVA_PHONE no Worker para receber o teste." }, 400);
+  await (await enviador(c)).texto(para, msg.teste());
+  return c.json({ ok: true, para });
 });
 
 admin.get("/lista-compras", async (c) => {
