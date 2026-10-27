@@ -191,7 +191,6 @@
           <button class="btn" type="button" id="wa-conectar" hidden>Conectar</button>
           <button class="btn sec" type="button" id="wa-teste" hidden>Enviar teste para a Ruiva</button>
           <button class="btn sec" type="button" id="wa-desconectar" hidden>Desconectar</button>
-          <button class="btn sec" type="button" id="wa-sair" hidden>Sair do aparelho</button>
         </div>
       </div>
     </section>
@@ -560,7 +559,6 @@
     $("wa-conectar").textContent = $("wa-qr").hidden ? "Conectar" : "Gerar novo QR Code";
     $("wa-teste").hidden = !conectado;
     $("wa-desconectar").hidden = !existe || !conectado;
-    $("wa-sair").hidden = !existe || !conectado;
     if (conectado && !$("wa-qr").hidden) { $("wa-qr").hidden = true; toast("WhatsApp conectado"); }
     // Enquanto o QR estiver na tela, confere a cada 3 s se a leitura já foi feita.
     if (!$("wa-qr").hidden && !$("aba-whatsapp").hidden) pollWa = setTimeout(carregarWhatsapp, 3000);
@@ -583,10 +581,6 @@
   }));
   $("wa-teste").addEventListener("click", (e) => acaoWa(e.target, "/whatsapp/teste", (r) => toast(`Teste enviado para ${r.para}`)));
   $("wa-desconectar").addEventListener("click", (e) => acaoWa(e.target, "/whatsapp/desconectar", () => toast("WhatsApp desconectado")));
-  $("wa-sair").addEventListener("click", (e) => {
-    if (!confirm("Sair do aparelho apaga a sessão. Para voltar vai ser preciso ler o QR Code de novo. Continuar?")) return;
-    acaoWa(e.target, "/whatsapp/sair", () => toast("Sessão encerrada"));
-  });
 })();
 </script>
 </body>

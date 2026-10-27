@@ -105,7 +105,7 @@ Crie um widget em Cloudflare → Turnstile. Coloque a site key em `turnstileSite
 - **Lista de compras:** ingredientes somados dos pedidos confirmados, com a opção de incluir os pendentes. Mostra quantas embalagens comprar e a contagem de panetones por sabor. Exporta CSV.
 - **Cardápio e receitas:** sabores, preços, peso, quantidade mínima e ativo/inativo. Tem também a receita **por unidade** de cada sabor e o cadastro de ingredientes com o tamanho da embalagem.
 - **Datas de entrega:** as opções que aparecem no formulário. Desative quando a data lotar.
-- **WhatsApp:** status da conexão, QR Code para conectar, desconectar/sair do aparelho e mensagem de teste.
+- **WhatsApp:** status da conexão, QR Code para conectar, desconectar e mensagem de teste.
 
 ## Rodar localmente
 

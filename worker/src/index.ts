@@ -293,7 +293,6 @@ admin.post("/whatsapp/instancia", async (c) => {
 
 admin.post("/whatsapp/conectar", async (c) => c.json(await instancias(backend(c)).conectar(await instanciaSalva(c))));
 admin.post("/whatsapp/desconectar", async (c) => c.json(await instancias(backend(c)).desconectar(await instanciaSalva(c))));
-admin.post("/whatsapp/sair", async (c) => c.json(await instancias(backend(c)).sair(await instanciaSalva(c))));
 
 admin.post("/whatsapp/teste", async (c) => {
   const para = telefoneRuiva(c);

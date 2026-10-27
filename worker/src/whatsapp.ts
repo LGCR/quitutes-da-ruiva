@@ -72,7 +72,6 @@ export function instancias(cfg: ConfigBackend) {
     ver: (id: string) => chamar<Instancia>(cfg, rota(id)),
     conectar: (id: string) => chamar<Conexao>(cfg, rota(id, "/connect?forceQr=true"), { method: "POST" }),
     desconectar: (id: string) => chamar<Instancia>(cfg, rota(id, "/disconnect"), { method: "POST" }),
-    sair: (id: string) => chamar<Instancia>(cfg, rota(id, "/logout"), { method: "POST" }),
   };
 }
 
