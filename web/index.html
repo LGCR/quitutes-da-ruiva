@@ -110,7 +110,21 @@
   .sucesso h2 { margin: 0; font-size: 1.9rem }
   .sucesso p { margin: 0; max-width: 44ch }
   .sucesso .codigo { font-family: var(--font-display); font-size: 1.2rem; font-weight: 700; background: var(--rosa-claro); border-radius: 99px; padding: 4px 16px }
-  footer { color: var(--muted); font-size: .85rem; text-align: center; padding-block: 0 32px }
+  footer { border-top: 6px solid var(--coral); color: var(--muted); font-size: .85rem; text-align: center }
+  footer .wrap { padding-block: 26px calc(26px + env(safe-area-inset-bottom, 0px)); display: flex; flex-direction: column; align-items: center; gap: 16px }
+  footer .marca { font-weight: 700; background: var(--bg); border-radius: 99px; padding: 4px 16px }
+  .assina { display: inline-flex; align-items: center; gap: 12px; text-align: left; color: inherit; text-decoration: none;
+    background: var(--papel); border: 2px dashed var(--rosa); border-radius: 22px; padding: 10px 18px 10px 12px; transition: border-color .15s, background .15s }
+  .assina:hover, .assina:focus-within { border-style: solid; border-color: var(--coral); background: var(--rosa-claro) }
+  .assina a:focus-visible { outline: 3px solid var(--azul-forte); outline-offset: 2px; border-radius: 4px }
+  .assina .mono { flex: none; display: grid; place-items: center; width: 42px; height: 42px; border-radius: 50%; background: var(--coral); color: var(--sobre-coral);
+    font-family: var(--font-display); font-weight: 800; font-size: 1.05rem; letter-spacing: -.02em; box-shadow: 0 0 0 3px var(--card), 0 0 0 5px var(--coral) }
+  .assina .txt { display: flex; flex-direction: column; line-height: 1.15 }
+  .assina .feito { font-size: .74rem; font-weight: 800; letter-spacing: .06em; text-transform: uppercase }
+  .assina .nome { font-family: var(--font-script); font-weight: 700; font-size: 1.5rem; color: var(--coral) }
+  .assina .contatos { display: flex; flex-direction: column; gap: 2px; margin-top: 4px; font-size: .8rem; font-weight: 700 }
+  .assina .contatos a { color: var(--fg); text-decoration: none; overflow-wrap: anywhere }
+  .assina .contatos a:hover { color: var(--coral); text-decoration: underline }
 </style>
 </head>
 <body>
@@ -225,7 +239,22 @@
     </section>
   </div>
 </main>
-<footer class="wrap">Quitutes da Ruiva · Sabor em cada detalhe</footer>
+<footer class="gingham">
+  <div class="wrap">
+    <div class="marca">Quitutes da Ruiva · Sabor em cada detalhe</div>
+    <div class="assina">
+      <span class="mono" aria-hidden="true">LR</span>
+      <span class="txt">
+        <span class="feito">Site desenvolvido por</span>
+        <span class="nome">Lucas Ribeiro</span>
+        <span class="contatos">
+          <a href="https://wa.me/5541987017429?text=Ol%C3%A1%2C%20Lucas!%20Vi%20o%20site%20da%20Quitutes%20da%20Ruiva." target="_blank" rel="noopener">WhatsApp (41) 98701-7429</a>
+          <a href="mailto:lucas.giovannicr@gmail.com?subject=Site%20Quitutes%20da%20Ruiva">lucas.giovannicr@gmail.com</a>
+        </span>
+      </span>
+    </div>
+  </div>
+</footer>
 
 <script src="/config.js"></script>
 <script src="/assets/form.js"></script>
