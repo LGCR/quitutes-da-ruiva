@@ -76,7 +76,9 @@ export function instancias(cfg: ConfigBackend) {
   };
 }
 
-export function criarWhatsapp(cfg: ConfigBackend & { instanceId: string | null; mock?: boolean }): Enviador {
+export function criarWhatsapp(
+  cfg: ConfigBackend & { instanceId: string | null; mock?: boolean; baixar?: (url: string) => Promise<Response> },
+): Enviador {
   if (cfg.mock) return enviadorMock();
 
   async function enviar(campos: Record<string, string>, arquivo?: { blob: Blob; nome: string }) {
@@ -91,7 +93,7 @@ export function criarWhatsapp(cfg: ConfigBackend & { instanceId: string | null; 
   return {
     texto: (numero, texto) => enviar({ to: numero, type: "TEXT", body: texto }),
     async imagem(numero, url, legenda) {
-      const res = await fetch(url);
+      const res = await (cfg.baixar ?? fetch)(url);
       if (!res.ok) throw new Error(`Não consegui baixar a imagem do cardápio (${res.status}).`);
       const blob = await res.blob();
       const nome = url.toLowerCase().endsWith(".png") ? "cardapio.png" : "cardapio.jpg";

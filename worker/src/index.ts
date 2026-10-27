@@ -36,7 +36,14 @@ const backend = (c: Context<App>) => ({ url: c.env.WHATSAPP_BACKEND_URL, key: c.
 /** Monta o envio com a instância conectada pelo painel (aba WhatsApp). */
 async function enviador(c: Context<App>): Promise<Enviador> {
   const cfg = await db.lerConfigWhatsapp(c.get("db"));
-  return criarWhatsapp({ ...backend(c), instanceId: cfg?.instance_id ?? null, mock: c.env.WHATSAPP_MOCK === "1" });
+  return criarWhatsapp({ ...backend(c), instanceId: cfg?.instance_id ?? null, mock: c.env.WHATSAPP_MOCK === "1", baixar: (u) => baixarDoSite(c, u) });
+}
+
+/** Arquivos do próprio site vêm pelo service binding; o resto, pela internet. */
+function baixarDoSite(c: Context<App>, url: string) {
+  const site = c.env.SITE;
+  if (site && new URL(url).host === new URL(c.env.SITE_URL).host) return site.fetch(url);
+  return fetch(url);
 }
 
 const telefoneRuiva = (c: Context<App>) => (c.env.RUIVA_PHONE ? normalizarTelefone(c.env.RUIVA_PHONE) : null);
@@ -47,8 +54,11 @@ async function enviarWhatsapp(c: Context<App>, orderId: string) {
   try {
     const [pedido, { produtos }, enviar] = await Promise.all([db.buscarPedido(d, orderId), db.catalogo(d), enviador(c)]);
     if (!pedido) return;
-    if (c.env.CARDAPIO_IMAGE_URL) await enviar.imagem(pedido.telefone, c.env.CARDAPIO_IMAGE_URL, legendaCardapio(pedido.nome));
-    else await enviar.texto(pedido.telefone, cardapioTexto(pedido.nome, produtos));
+    // Se a imagem não sair (arquivo fora do ar, por exemplo), o cardápio vai em texto.
+    const imagem = c.env.CARDAPIO_IMAGE_URL
+      ? await enviar.imagem(pedido.telefone, c.env.CARDAPIO_IMAGE_URL, legendaCardapio(pedido.nome)).then(() => true, (err) => (console.error("cardapio imagem", err), false))
+      : false;
+    if (!imagem) await enviar.texto(pedido.telefone, cardapioTexto(pedido.nome, produtos));
     await enviar.texto(pedido.telefone, msg.pedidoRecebido(pedido, c.env.SITE_URL));
     await db.marcarWhatsapp(d, orderId, "enviado");
   } catch (err) {

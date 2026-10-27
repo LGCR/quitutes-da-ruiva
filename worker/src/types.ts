@@ -14,6 +14,8 @@ export interface Env {
   SITE_URL: string;
   ALLOWED_ORIGINS?: string;
   CARDAPIO_IMAGE_URL?: string;
+  /** Worker do site (service binding), para baixar arquivos dele sem passar pelo workers.dev */
+  SITE?: Fetcher;
 }
 
 export type StatusPedido = "pendente" | "confirmado" | "substituido" | "cancelado" | "entregue";

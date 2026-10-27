@@ -53,6 +53,14 @@ describe("envio pelo whatsapp-backend", () => {
     expect((form.get("file") as File).name).toBe("cardapio.jpg");
   });
 
+  it("usa o baixador informado para a imagem (service binding do site)", async () => {
+    const f = mockFetch(resposta(202, { success: true, data: {} }));
+    const baixar = vi.fn(async () => new Response(new Blob(["jpg"], { type: "image/jpeg" })));
+    await criarWhatsapp({ ...cfg, instanceId: "inst-1", baixar }).imagem("5511987654321", "https://site/cardapio.jpg", "Cardápio");
+    expect(baixar).toHaveBeenCalledWith("https://site/cardapio.jpg");
+    expect(f).toHaveBeenCalledTimes(1);
+  });
+
   it("explica a assinatura suspensa", async () => {
     mockFetch(resposta(402, { success: false, error: { code: "SUBSCRIPTION_SUSPENDED", message: "Payment required" } }));
     const p = criarWhatsapp({ ...cfg, instanceId: "inst-1" }).texto("5511987654321", "Oi");
