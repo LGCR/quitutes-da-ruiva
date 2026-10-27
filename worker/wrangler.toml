@@ -17,7 +17,7 @@ service = "quitutes-da-ruiva"
 [vars]
 SITE_URL = "https://quitutes-da-ruiva.lucas-giovannicr.workers.dev"
 # Origens extras permitidas (separadas por vírgula), ex.: o domínio *.pages.dev durante os testes
-ALLOWED_ORIGINS = "http://localhost:5173,http://127.0.0.1:5173"
+ALLOWED_ORIGINS = "https://quitutesdaruiva.com.br,https://www.quitutesdaruiva.com.br,http://localhost:5173,http://127.0.0.1:5173"
 # URL pública da imagem do cardápio (web/assets/cardapio.jpg publicada no Pages). Vazio = cardápio em texto.
 CARDAPIO_IMAGE_URL = "https://quitutes-da-ruiva.lucas-giovannicr.workers.dev/assets/cardapio.jpg"
 # "1" = não chama o whatsapp-backend, só registra no log (bom para testar)
