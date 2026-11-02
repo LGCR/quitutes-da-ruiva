@@ -12,8 +12,11 @@ function ok<T>(r: { data: T; error: { message: string } | null }): T {
   return r.data;
 }
 
+// Tudo de products, menos o base64 da imagem (pesado demais para a lista do cardápio).
+const COLUNAS_PRODUTO = "id, nome, descricao, peso_g, sabor, tamanho, preco_centavos, qtd_minima, ativo, ordem, imagem_atualizada_em";
+
 export async function catalogo(db: Db, apenasAtivos = true) {
-  let qp = db.from("products").select("*").order("ordem").order("nome");
+  let qp = db.from("products").select(COLUNAS_PRODUTO).order("ordem").order("nome");
   let qd = db.from("datas_entrega").select("*").order("ordem");
   if (apenasAtivos) {
     qp = qp.eq("ativo", true);
@@ -79,4 +82,20 @@ export async function lerConfigWhatsapp(db: Db): Promise<{ instance_id: string |
 
 export async function salvarConfigWhatsapp(db: Db, cfg: { instance_id: string | null; instance_name: string | null }) {
   ok(await db.from("whatsapp_config").upsert({ id: true, ...cfg, updated_at: new Date().toISOString() }));
+}
+
+export async function lerImagemProduto(db: Db, id: string): Promise<{ imagem_base64: string; imagem_tipo: string } | null> {
+  const r = ok(await db.from("products").select("imagem_base64, imagem_tipo").eq("id", id).maybeSingle());
+  return r?.imagem_base64 && r.imagem_tipo ? (r as { imagem_base64: string; imagem_tipo: string }) : null;
+}
+
+export async function salvarImagemProduto(db: Db, id: string, img: { imagem_base64: string; imagem_tipo: string } | null) {
+  const r = ok(
+    await db
+      .from("products")
+      .update({ ...(img ?? { imagem_base64: null, imagem_tipo: null }), imagem_atualizada_em: img ? new Date().toISOString() : null })
+      .eq("id", id)
+      .select("id"),
+  );
+  return (r?.length ?? 0) > 0;
 }

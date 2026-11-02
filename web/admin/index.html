@@ -140,7 +140,7 @@
         <h3>Sabores e preços</h3>
         <p class="dica">Cada tamanho é uma linha. Linhas com o mesmo <b>Sabor</b> aparecem juntas no formulário. Preencha o preço e marque <b>Ativo</b> para o item aparecer no site. O código não muda depois de criado; desative em vez de apagar.</p>
         <div class="tabela"><table>
-          <thead><tr><th>Código</th><th>Sabor</th><th>Tamanho</th><th>Nome no pedido</th><th>Descrição</th><th class="num">Preço (R$)</th><th class="num">Peso (g)</th><th class="num">Mín.</th><th class="num">Ordem</th><th>Ativo</th><th></th></tr></thead>
+          <thead><tr><th>Código</th><th>Foto</th><th>Sabor</th><th>Tamanho</th><th>Nome no pedido</th><th>Descrição</th><th class="num">Preço (R$)</th><th class="num">Peso (g)</th><th class="num">Mín.</th><th class="num">Ordem</th><th>Ativo</th><th></th></tr></thead>
           <tbody id="t-produtos"></tbody>
         </table></div>
       </div>
@@ -403,6 +403,10 @@
     const linhaProduto = (p, novo) => `
       <tr data-id="${esc(p.id || "")}" ${novo ? "data-novo" : ""}>
         <td>${novo ? `<input data-k="id" placeholder="ex.: nutella" size="10">` : `<b>${esc(p.id)}</b>`}</td>
+        <td class="foto-cel">${novo ? `<span class="dica">salve antes</span>` : `
+          ${p.imagem_atualizada_em ? `<img src="${API}/api/produtos/${encodeURIComponent(p.id)}/imagem?v=${encodeURIComponent(p.imagem_atualizada_em)}" alt="" width="56" height="56" style="object-fit:cover;border-radius:8px;display:block;margin-bottom:4px">` : ""}
+          <label class="link" style="cursor:pointer">${p.imagem_atualizada_em ? "Trocar" : "Enviar foto"}<input type="file" accept="image/*" data-foto hidden></label>
+          ${p.imagem_atualizada_em ? ` · <button class="link" data-tirar-foto type="button">Tirar</button>` : ""}`}</td>
         <td><input data-k="sabor" value="${esc(p.sabor)}" size="16" placeholder="ex.: Chocotone"></td>
         <td><input data-k="tamanho" value="${esc(p.tamanho)}" size="6" placeholder="500 g"></td>
         <td><input data-k="nome" value="${esc(p.nome)}" size="16" placeholder="Chocotone 500 g"></td>
@@ -454,6 +458,47 @@
         peso_g: val(tr, "peso_g"), qtd_minima: val(tr, "qtd_minima"), ordem: val(tr, "ordem"), ativo: val(tr, "ativo"),
       });
       toast("Sabor salvo");
+      carregarCatalogo();
+    } catch (err) { toast(err.message, true); }
+  });
+
+  // Reduz a foto no navegador (máx. 900 px, JPEG) para ela caber folgada no banco.
+  function reduzirImagem(file, max = 900) {
+    return new Promise((ok, erro) => {
+      const url = URL.createObjectURL(file);
+      const img = new Image();
+      img.onload = () => {
+        const f = Math.min(1, max / Math.max(img.width, img.height));
+        const cv = document.createElement("canvas");
+        cv.width = Math.round(img.width * f); cv.height = Math.round(img.height * f);
+        const ctx = cv.getContext("2d");
+        ctx.fillStyle = "#fff"; ctx.fillRect(0, 0, cv.width, cv.height);
+        ctx.drawImage(img, 0, 0, cv.width, cv.height);
+        URL.revokeObjectURL(url);
+        ok(cv.toDataURL("image/jpeg", 0.85));
+      };
+      img.onerror = () => { URL.revokeObjectURL(url); erro(new Error("Não consegui abrir essa imagem.")); };
+      img.src = url;
+    });
+  }
+
+  $("t-produtos").addEventListener("change", async (e) => {
+    const input = e.target.closest("[data-foto]");
+    if (!input || !input.files[0]) return;
+    const id = input.closest("tr").dataset.id;
+    try {
+      toast("Enviando foto…");
+      await salvar(`/produtos/${encodeURIComponent(id)}/imagem`, { imagem: await reduzirImagem(input.files[0]) });
+      toast("Foto salva");
+      carregarCatalogo();
+    } catch (err) { toast(err.message, true); input.value = ""; }
+  });
+
+  $("t-produtos").addEventListener("click", async (e) => {
+    if (!e.target.closest("[data-tirar-foto]")) return;
+    try {
+      await salvar(`/produtos/${encodeURIComponent(e.target.closest("tr").dataset.id)}/imagem`, { imagem: null });
+      toast("Foto removida");
       carregarCatalogo();
     } catch (err) { toast(err.message, true); }
   });

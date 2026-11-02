@@ -105,6 +105,14 @@ app.get("/api/catalogo", async (c) => {
   return c.json({ produtos, datas });
 });
 
+app.get("/api/produtos/:id/imagem", async (c) => {
+  const img = await db.lerImagemProduto(c.get("db"), c.req.param("id"));
+  if (!img) return c.body(null, 404);
+  const bytes = Uint8Array.from(atob(img.imagem_base64), (ch) => ch.charCodeAt(0));
+  // A URL leva ?v=<data da troca>, então pode ficar em cache por bastante tempo.
+  return c.body(bytes, 200, { "Content-Type": img.imagem_tipo, "Cache-Control": "public, max-age=86400" });
+});
+
 app.get("/api/pedidos/:token", async (c) => {
   const token = c.req.param("token");
   if (!UUID.test(token)) return c.json({ erro: "Link inválido." }, 404);
@@ -343,6 +351,22 @@ admin.put("/produtos/:id", async (c) => {
   if (!row.nome || !Number.isFinite(row.preco_centavos) || row.preco_centavos < 0) return c.json({ erro: "Preencha nome e preço." }, 400);
   const r = await c.get("db").from("products").upsert(row);
   if (r.error) throw new Error(r.error.message);
+  return c.json({ ok: true });
+});
+
+const MAX_IMAGEM_BASE64 = 1_400_000; // ~1 MB de imagem
+
+/** Recebe a foto como data URL (o painel já reduz antes de enviar). `imagem: null` remove. */
+admin.put("/produtos/:id/imagem", async (c) => {
+  const b = await c.req.json<any>();
+  let img: { imagem_base64: string; imagem_tipo: string } | null = null;
+  if (b.imagem != null) {
+    const m = /^data:(image\/(?:jpeg|png|webp));base64,([A-Za-z0-9+/]+=*)$/.exec(String(b.imagem));
+    if (!m) return c.json({ erro: "Envie uma imagem JPG, PNG ou WebP." }, 400);
+    if (m[2].length > MAX_IMAGEM_BASE64) return c.json({ erro: "Imagem grande demais. Use uma menor." }, 400);
+    img = { imagem_tipo: m[1], imagem_base64: m[2] };
+  }
+  if (!(await db.salvarImagemProduto(c.get("db"), c.req.param("id"), img))) return c.json({ erro: "Sabor não encontrado." }, 404);
   return c.json({ ok: true });
 });
 

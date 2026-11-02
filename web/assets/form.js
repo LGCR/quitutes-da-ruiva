@@ -44,6 +44,13 @@
     return [...grupos];
   }
 
+  // Foto cadastrada no painel (primeiro tamanho que tiver); sem ela, cai no arquivo antigo em /assets/sabores.
+  function fotoDoSabor(ps) {
+    const p = ps.find((x) => x.imagem_atualizada_em);
+    if (p) return `${API}/api/produtos/${encodeURIComponent(p.id)}/imagem?v=${encodeURIComponent(p.imagem_atualizada_em)}`;
+    return `/assets/sabores/${ps[0].id.replace(/-\d+$/, "")}.jpg`;
+  }
+
   function renderMenu() {
     if (!produtos.length) {
       $("menu").innerHTML = `<div class="carregando">O cardápio abre em breve. Volte mais tarde ou chame a Ruiva no WhatsApp.</div>`;
@@ -54,7 +61,7 @@
       <div class="sabor ${ps.some((p) => qtd[p.id]) ? "on" : ""}">
         <svg class="azevinho esq" viewBox="0 0 30 22" aria-hidden="true"><use href="#azevinho"/></svg>
         <svg class="azevinho" viewBox="0 0 30 22" aria-hidden="true"><use href="#azevinho"/></svg>
-        <img class="foto" src="/assets/sabores/${esc(ps[0].id.replace(/-\d+$/, ""))}.jpg" alt="" width="190" height="143" loading="lazy" onerror="this.style.visibility='hidden'">
+        <img class="foto" src="${esc(fotoDoSabor(ps))}" alt="" width="190" height="143" loading="lazy" onerror="this.style.visibility='hidden'">
         <div class="info">
           <h3>${esc(sabor)}</h3>
           ${ps[0].descricao ? `<p>${esc(ps[0].descricao)}</p>` : ""}

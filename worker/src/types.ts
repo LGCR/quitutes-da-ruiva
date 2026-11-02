@@ -32,6 +32,8 @@ export interface Produto {
   qtd_minima: number;
   ativo: boolean;
   ordem: number;
+  /** quando a foto foi trocada pela última vez; null = sem foto */
+  imagem_atualizada_em: string | null;
 }
 
 export interface DataEntrega {
